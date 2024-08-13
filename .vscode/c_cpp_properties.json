@@ -10,6 +10,7 @@
             "includePath": [
                 "/Users/espiller/Programming & Electronics/repos/morse_code_visualizer/include",
                 "/Users/espiller/Programming & Electronics/repos/morse_code_visualizer/src",
+                "/Users/espiller/Programming & Electronics/repos/morse_code_visualizer/.pio/libdeps/uno/LiquidCrystal/src",
                 "/Users/espiller/.platformio/packages/framework-arduino-avr/cores/arduino",
                 "/Users/espiller/.platformio/packages/framework-arduino-avr/variants/standard",
                 "/Users/espiller/.platformio/packages/framework-arduino-avr/libraries/EEPROM/src",
@@ -24,6 +25,7 @@
                 "path": [
                     "/Users/espiller/Programming & Electronics/repos/morse_code_visualizer/include",
                     "/Users/espiller/Programming & Electronics/repos/morse_code_visualizer/src",
+                    "/Users/espiller/Programming & Electronics/repos/morse_code_visualizer/.pio/libdeps/uno/LiquidCrystal/src",
                     "/Users/espiller/.platformio/packages/framework-arduino-avr/cores/arduino",
                     "/Users/espiller/.platformio/packages/framework-arduino-avr/variants/standard",
                     "/Users/espiller/.platformio/packages/framework-arduino-avr/libraries/EEPROM/src",
