@@ -58,20 +58,18 @@ void pin_setup() {
   }
 }
 
-// Function containing 
-void morse_alphabet() {
-  /*
-  Using an array of values 0 and 1 to define short and long presses
-  0 -> short press
-  1 -> long press
 
-  The collection of 0101... will define a letter that is output
-  onto the LCD
-  */
+/*
+Using an array of values 0 and 1 to define short and long presses
+0 -> short press
+1 -> long press
 
-  int morseCode[4]; // defines array to hold the morse code (0, 1)
-
-}
+The collection of 0101... will define a letter that is output
+onto the LCD
+*/
+int morseCode[] = {
+  '01'
+};
 
 // Defining the list for holding the set of input from button
 int inputArray[4]; // defines a fixed-sized array of 4
