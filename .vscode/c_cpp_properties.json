@@ -10,6 +10,7 @@
             "includePath": [
                 "/Users/espiller/Dev/repos/morse_code_visualizer/include",
                 "/Users/espiller/Dev/repos/morse_code_visualizer/src",
+                "/Users/espiller/Dev/repos/morse_code_visualizer/.pio/libdeps/uno/ArduinoSTL/src",
                 "/Users/espiller/Dev/repos/morse_code_visualizer/.pio/libdeps/uno/LiquidCrystal/src",
                 "/Users/espiller/.platformio/packages/framework-arduino-avr/cores/arduino",
                 "/Users/espiller/.platformio/packages/framework-arduino-avr/variants/standard",
@@ -25,6 +26,7 @@
                 "path": [
                     "/Users/espiller/Dev/repos/morse_code_visualizer/include",
                     "/Users/espiller/Dev/repos/morse_code_visualizer/src",
+                    "/Users/espiller/Dev/repos/morse_code_visualizer/.pio/libdeps/uno/ArduinoSTL/src",
                     "/Users/espiller/Dev/repos/morse_code_visualizer/.pio/libdeps/uno/LiquidCrystal/src",
                     "/Users/espiller/.platformio/packages/framework-arduino-avr/cores/arduino",
                     "/Users/espiller/.platformio/packages/framework-arduino-avr/variants/standard",

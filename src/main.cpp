@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <LiquidCrystal.h>
-
+#include <ArduinoSTL.h>
+#include <vector>
 /*
 LiquidCrystalDisplay (LCD) - Morse Code
 
@@ -43,8 +44,32 @@ bool pressed; // boolean value for whether or not the button is pressed
 unsigned long lastPressTime = 0; // to track the time of the last button press
 const unsigned long debounceDelay = 50; // debounce time in milliseconds
 
+// Function to setup the digital pins for I/O
+void pin_setup() {
+  // Initializes the digital board pins for I/O
+  pinMode(button, INPUT); // sets button to read input
+  pinMode(r, OUTPUT); // sets RGB light pins to output
+  pinMode(g, OUTPUT);
+  pinMode(b, OUTPUT);
+  int pin; // initializing the pin variable for the board
+  for (pin = d4; pin <= d7; pin++)
+  {
+    pinMode(pin, OUTPUT);
+  }
+}
+
 // Function containing 
 void morse_alphabet() {
+  /*
+  Using an array of values 0 and 1 to define short and long presses
+  0 -> short press
+  1 -> long press
+
+  The collection of 0101... will define a letter that is output
+  onto the LCD
+  */
+
+  int morseCode[4]; // defines array to hold the morse code (0, 1)
 
 }
 
@@ -57,12 +82,7 @@ void LCD_settings() {
 }
 
 void setup() {
-  // Initializes the I/O pins for input or output
-  int pin; // initializing the pin variable for the board
-  for (pin = d4; pin <= d7; pin++)
-  {
-    pinMode(pin, OUTPUT);
-  }
+  pin_setup(); // runs function to setup pins
 
   // Set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
