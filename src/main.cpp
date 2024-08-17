@@ -41,9 +41,13 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 const int button = 22, r = 28, g = 25, b = 24;
 
 // Defining variable for button presses & time calculations
-bool pressed; // boolean value for whether or not the button is pressed
+bool isPressed; // boolean value for whether or not the button is pressed
 unsigned long lastPressTime = 0; // to track the time of the last button press
 const unsigned long debounceDelay = 50; // debounce time in milliseconds
+unsigned long pressStartTime = 0; // stores the time when the button was pressed
+unsigned long pressDuration = 0; // stroes the duration of the button press
+char shortPress = '0'; // defines the short press as char 0 
+char longPress = '1'; // defines the long press as char 1
 
 // Function to setup the digital pins for I/O
 void pin_setup() {
@@ -73,9 +77,9 @@ int morseCode[] = { // defining the array containing all morse code letters
 };
 
 // Setting up the array to collect user input
-std::vector<char> morse_code_input;
+std::vector<char> morseCodeInput;
 
-void setup() {
+void setup() { // runs only once when the board turns on
   pin_setup(); // runs function to setup pins
   
   // Setting up the LCD settings
@@ -89,8 +93,17 @@ void setup() {
   delay(500);
 }
 
-void loop() {
-  unsigned current_time = millis();
+void loop() { // runs the whole time when the board is on
+  unsigned currentTime = millis(); // gets the current time since this block of code ran
+
+  if (digitalRead(button) == HIGH) // checks if the button is pressed
+  {
+    if (!isPressed && (currentTime - lastPressTime > debounceDelay)) // checks to see if it wasn't already pressed and debounce time passed
+    {
+      isPressed = true; // mark button as pressed in a variable
+      if ()
+    }
+  }
 
   lcd.setCursor(0, 1); // sets cursor to column 0, line 1
 }

@@ -6,7 +6,7 @@
 // defining variables related to button
 const int button = 12; // pin for button input
 int count; // counter for how many times the button is pressed
-bool pressed; // boolean value for whether or not the button is pressed
+bool isPressed; // boolean value for whether or not the button is pressed
 unsigned long lastPressTime = 0; // to track the time of the last button press
 const unsigned long debounceDelay = 50; // debounce time in milliseconds
 const unsigned long displayDelay = 1000; // time to wait after last press before displaying count
@@ -132,7 +132,7 @@ void blinking() { // blinks the dp on LED to show it is ready to process counts
 }
 
 void counting() {
-  if (pressed) {
+  if (isPressed) {
     count++;
     delay(200);  // debounce delay to avoid multiple counts for a single press
     while (digitalRead(button) == HIGH) {
@@ -169,13 +169,13 @@ void loop() {
   unsigned long currentTime = millis(); // Get the current time
 
   if (digitalRead(button) == HIGH) { // Check if the button is pressed
-    if (!pressed && (currentTime - lastPressTime > debounceDelay)) { // If it wasn't already pressed and debounce time has passed
-      pressed = true; // Mark it as pressed
+    if (!isPressed && (currentTime - lastPressTime > debounceDelay)) { // If it wasn't already pressed and debounce time has passed
+      isPressed = true; // Mark it as pressed
       count++; // Increment the count
       lastPressTime = currentTime; // Update the time of the last press
     }
   } else {
-    pressed = false; // Mark as not pressed when the button is released
+    isPressed = false; // Mark as not pressed when the button is released
   }
 
   // Check if enough time has passed since the last press to display the count
