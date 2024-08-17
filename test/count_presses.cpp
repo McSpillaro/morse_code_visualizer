@@ -1,3 +1,8 @@
+#include <Arduino.h>
+#include <LiquidCrystal.h>
+#include <ArduinoSTL.h>
+#include <vector>
+
 // defining variables related to button
 const int button = 12; // pin for button input
 int count; // counter for how many times the button is pressed
