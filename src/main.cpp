@@ -2,6 +2,7 @@
 #include <LiquidCrystal.h>
 #include <ArduinoSTL.h>
 #include <vector>
+
 /*
 LiquidCrystalDisplay (LCD) - Morse Code
 
@@ -58,7 +59,6 @@ void pin_setup() {
   }
 }
 
-
 /*
 Using an array of values 0 and 1 to define short and long presses
 0 -> short press
@@ -67,24 +67,20 @@ Using an array of values 0 and 1 to define short and long presses
 The collection of 0101... will define a letter that is output
 onto the LCD
 */
-int morseCode[] = {
+
+int morseCode[] = { // defining the array containing all morse code letters
   '01'
 };
 
-// Defining the list for holding the set of input from button
-int inputArray[4]; // defines a fixed-sized array of 4
-
-// Initializes the LCD display settings
-void LCD_settings() {
-  lcd.leftToRight(); // go left for the next letters
-}
+// Setting up the array to collect user input
+std::vector<char> morse_code_input;
 
 void setup() {
   pin_setup(); // runs function to setup pins
-
-  // Set up the LCD's number of columns and rows:
-  lcd.begin(16, 2);
-
+  
+  // Setting up the LCD settings
+  lcd.begin(16, 2); // defines number of columns, rows
+  lcd.leftToRight(); // go left for the next letters
   // Turn off the display:
   lcd.noDisplay();
   delay(500);
