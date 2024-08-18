@@ -66,6 +66,7 @@ struct MorseCode { // Declares a dictionary which is used to store the specific 
 int mapSize = 0; // keeps track of the current number of elements (key-value pairs) in the alphabet[]
 
 std::vector<char> morseCodeInput; // Collects the user's input from the button for morse code detection.
+std::string morseCodeJoined; // Takes the user input and then joins them as one string
 
 // Adds a new key-value pair to the 'alphabet' array map.
 void add(String key, String value) {
@@ -200,12 +201,14 @@ void loop() {
 
   if (button.pressDuration <= 500) {
     if (button.pressDuration <= 250) {
-      
-    } else {
-      
+      morseCodeInput.push_back(button.shortPress); // adds short press to input vector
+    }
+    else
+    {
+      morseCodeInput.push_back(button.longPress); // adds long press to output vector
     }
   } else {
-    
+    String result = get()
   }
 
   lcd.setCursor(0, 1); // resets cursor to column 0, line 1
