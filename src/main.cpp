@@ -179,7 +179,8 @@ void set_color(int R, int G, int B) {
 }
 
 // Runs only once when the board turns on
-void setup() { 
+void setup() {
+  set_color(0, 0, 0); // turns off the led initially
   pin_setup(); // runs function to setup pins
 
   // Adding the appropriate key-value pairs for the morse code and alphabet
@@ -200,16 +201,30 @@ void setup() {
 
 // Runs the whole time when the board is on
 void loop() { 
+  userOutput.redValue = 0;
+  userOutput.greenValue = 0;
+  userOutput.blueValue = 0;
+  set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
   morseCodeInput.clear(); // clears the user's input in array
   morseCodeJoined = ""; // clears the content of any joined code as a string
-  
+
   if (digitalRead(pin.pushButton) == HIGH) { // if the button is pressed
+    userOutput.redValue = 255;
+    userOutput.greenValue = 255;
+    userOutput.blueValue = 255;
+    set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
+
     if (!button.isPressed) { // ensures this is the first time the button is pressed
       button.isPressed = true;
       button.pressNotDuration = millis() - button.lastPressTime; // calculates the duration when button is not pressed
       button.pressStartTime = millis(); // record the time when the button was pressed
     }
   } else { // if the button was not pressed
+    userOutput.redValue = 0;
+    userOutput.greenValue = 0;
+    userOutput.blueValue = 0;
+    set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
+
     if (button.isPressed) { // if the button was previously pressed
       button.isPressed = false;
       button.lastPressTime = millis(); // records time when button is released
@@ -230,16 +245,40 @@ void loop() {
       }
     } else { // for when the button is held "too" long
       userOutput.morseCodeOutput = combineInput(morseCodeInput);
+      if (userOutput.morseCodeOutput == "Invalid Code") {
+        userOutput.redValue = 255;
+        userOutput.greenValue = 0;
+        userOutput.blueValue = 0;
+        set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
+      }
       break;
     }
     
     if (button.pressNotDuration >= 300) { // checks for long duration between each press to detect end of input
       userOutput.morseCodeOutput = combineInput(morseCodeInput);
+      if (userOutput.morseCodeOutput == "Invalid Code") { // checks for invalid input
+        userOutput.redValue = 255;
+        userOutput.greenValue = 0;
+        userOutput.blueValue = 0;
+        set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
+      }      
       break;
     }
   }
 
+  if (button.pressDuration >= 1000) { // if button is held longer than 1 second
+    lcd.clear(); // clears lcd
+    userOutput.redValue = 0;
+    userOutput.greenValue = 0;
+    userOutput.blueValue = 255;
+    set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
+  }
+
   lcd.setCursor(0, 0); // resets cursor to column 0, line 0
   lcd.autoscroll(); // sets the display to automatically scroll
+  userOutput.redValue = 0;
+  userOutput.greenValue = 255;
+  userOutput.blueValue = 0;
+  set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
   lcd.print(userOutput.morseCodeOutput); // prints the letter to the lcd
 }
