@@ -4,7 +4,7 @@
 #include <vector>
 
 // defining variables related to button
-const int button = 12; // pin for button input
+const int buttonPin = 12; // pin for button input
 int count; // counter for how many times the button is pressed
 bool isPressed; // boolean value for whether or not the button is pressed
 unsigned long lastPressTime = 0; // to track the time of the last button press
@@ -135,7 +135,7 @@ void counting() {
   if (isPressed) {
     count++;
     delay(200);  // debounce delay to avoid multiple counts for a single press
-    while (digitalRead(button) == HIGH) {
+    while (digitalRead(buttonPin) == HIGH) {
       // nothing happens to wait until the button is released
     }
   }
@@ -148,7 +148,7 @@ void setup() {
     pinMode(pin, OUTPUT);
   }
 
-  pinMode(button, INPUT); // sets button as an input on board
+  pinMode(buttonPin, INPUT); // sets button as an input on board
 
   // shows initializing at startup -> if not seen, something is wrong
   displayZero();
@@ -168,7 +168,7 @@ void setup() {
 void loop() {
   unsigned long currentTime = millis(); // Get the current time
 
-  if (digitalRead(button) == HIGH) { // Check if the button is pressed
+  if (digitalRead(buttonPin) == HIGH) { // Check if the button is pressed
     if (!isPressed && (currentTime - lastPressTime > debounceDelay)) { // If it wasn't already pressed and debounce time has passed
       isPressed = true; // Mark it as pressed
       count++; // Increment the count
