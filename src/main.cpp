@@ -58,15 +58,22 @@ struct ButtonConfig { // Objects specific to the functionality and features with
 
 LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7); // defining the LCD screen pins
 
+struct Output { // All output on the board like the LCD screen and RGB light.
+  int redValue; // red value for RGB light (0-255)
+  int greenValue; // green value for RGB light (0-255)
+  int blueValue; // blue value for RGB light (0-255)
+  String morseCodeOutput; // letter for corresponding morse code
+} userOutput;
+
 struct MorseCode { // Declares a dictionary which is used to store the specific key (morse code pattern) and value (letter).
-  String key;
-  String value;
+  String key; // morse code
+  String value; // corresponding letter
 } alphabet[26]; // An array map to hold the key value pairs.
 
 int mapSize = 0; // keeps track of the current number of elements (key-value pairs) in the alphabet[]
 
 std::vector<char> morseCodeInput; // Collects the user's input from the button for morse code detection.
-std::string morseCodeJoined; // Takes the user input and then joins them as one string
+String morseCodeJoined; // Takes the user input and then joins them as one string
 
 // Adds a new key-value pair to the 'alphabet' array map.
 void add(String key, String value) {
@@ -83,6 +90,14 @@ String get(String key) {
     }
   }
   return "Invalid Code"; // if the key did not match anything
+}
+
+String combineInput(std::vector<char> input) { // Combines the separated indexes of the input into one string
+  for (char c : input) { // iterates over the user morse code input
+    morseCodeJoined += c; // joins the separated morse code inputs into one string code
+  }
+  String result = get(morseCodeJoined);
+  return result;
 }
 
 String code[26] = {  // Array of size 26 containing all code patterns; in order of A-Z
@@ -166,7 +181,7 @@ void set_color(int R, int G, int B) {
 // Runs only once when the board turns on
 void setup() { 
   pin_setup(); // runs function to setup pins
-  
+
   // Adding the appropriate key-value pairs for the morse code and alphabet
   for (int i = 0; i < 26; i++) {
     add(code[i], letter[i]);
@@ -185,6 +200,8 @@ void setup() {
 
 // Runs the whole time when the board is on
 void loop() { 
+  morseCodeInput.clear(); // clears the user's input in array
+
   if (digitalRead(pin.pushButton) == HIGH) { // if the button is pressed
     if (!button.isPressed) { // ensures this is the first time the button is pressed
       button.isPressed = true;
@@ -199,17 +216,29 @@ void loop() {
     }
   }
 
-  if (button.pressDuration <= 500) {
-    if (button.pressDuration <= 250) {
-      morseCodeInput.push_back(button.shortPress); // adds short press to input vector
+  int inputLength = sizeof(morseCodeInput) / sizeof(morseCodeInput[0]); // checks for valid or appropriate morse code length; must be <= 4
+  
+  while (inputLength <= 4) {
+    if (button.pressDuration <= 200) { // checks for valid long press
+      if (button.pressDuration <= 100) { // checks for valid short press
+        morseCodeInput.push_back(button.shortPress); // adds short press to input vector
+      }
+      else
+      {
+        morseCodeInput.push_back(button.longPress); // adds long press to output vector
+      }
+    } else { // for when the button is held "too" long
+      userOutput.morseCodeOutput = combineInput(morseCodeInput);
+      break;
     }
-    else
-    {
-      morseCodeInput.push_back(button.longPress); // adds long press to output vector
+    
+    if (button.pressNotDuration >= 300) { // checks for long duration between each press to detect end of input
+      userOutput.morseCodeOutput = combineInput(morseCodeInput);
+      break;
     }
-  } else {
-    String result = get()
   }
 
-  lcd.setCursor(0, 1); // resets cursor to column 0, line 1
+  lcd.setCursor(0, 0); // resets cursor to column 0, line 0
+  lcd.autoscroll(); // sets the display to automatically scroll
+  lcd.print(userOutput.morseCodeOutput); // prints the letter to the lcd
 }
