@@ -29,10 +29,10 @@ The circuit (LCD module):
    * wiper to LCD VO pin (pin 3)
 
 The circuit (Button & RGB light):
- * SW1 push button pin to digital pin 22
- * D1 pin 2 to digital pin 28
- * D1 pin 3 to digital pin 25
- * D1 pin 4 to digital pin 24
+ * SW1 push button pin to digital pin 7
+ * D1 pin 2 to digital pin 13
+ * D1 pin 3 to digital pin 10
+ * D1 pin 4 to digital pin 9
 */
 
 struct PinConfig { // Objects specific to the board's I/O pin layout and configuration.
@@ -41,7 +41,7 @@ struct PinConfig { // Objects specific to the board's I/O pin layout and configu
   const int d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 
   // Defining the variables for the digital pin I/O on RGB & Button
-  const int pushButton = 22, r = 28, g = 25, b = 24;
+  const int pushButton = 7, r = 13, g = 10, b = 9;
 } pin;
 
 struct ButtonConfig { // Objects specific to the functionality and features with the button.
@@ -164,8 +164,7 @@ void pin_setup() {
   pinMode(pin.r, OUTPUT); // sets RGB light pins to output
   pinMode(pin.g, OUTPUT);
   pinMode(pin.b, OUTPUT);
-  int i; // initializing the pin variable for the board
-  for (i = pin.d4; i <= pin.d7; i++)
+  for (int i = pin.d4; i <= pin.d7; i++)
   {
     pinMode(i, OUTPUT);
   }
@@ -232,7 +231,7 @@ void loop() {
     }
   }
 
-  int inputLength = sizeof(morseCodeInput) / sizeof(morseCodeInput[0]); // checks for valid or appropriate morse code length; must be <= 4
+  int inputLength = morseCodeInput.size(); // checks for valid or appropriate morse code length; must be <= 4
   
   while (inputLength <= 4) {
     if (button.pressDuration <= 200) { // checks for valid long press
