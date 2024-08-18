@@ -201,7 +201,8 @@ void setup() {
 // Runs the whole time when the board is on
 void loop() { 
   morseCodeInput.clear(); // clears the user's input in array
-
+  morseCodeJoined = ""; // clears the content of any joined code as a string
+  
   if (digitalRead(pin.pushButton) == HIGH) { // if the button is pressed
     if (!button.isPressed) { // ensures this is the first time the button is pressed
       button.isPressed = true;
