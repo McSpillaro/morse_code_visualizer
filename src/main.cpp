@@ -22,9 +22,9 @@ The circuit (LCD module):
 
 The circuit (Button & RGB light):
  * SW1 push button pin to digital pin 7
- * D1 pin 2 to digital pin 13
- * D1 pin 3 to digital pin 10
- * D1 pin 4 to digital pin 9
+ * D1 pin 2 to digital pin 10
+ * D1 pin 3 to digital pin 9
+ * D1 pin 4 to digital pin 6
 */
 
 // All libraries are installed from PlatformIO libraries onto the project (not sys dependent)
@@ -40,7 +40,7 @@ struct PinConfig { // Objects specific to the board's I/O pin layout and configu
   const int d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 
   // Defining the variables for the digital pin I/O on RGB & Button
-  const int pushButton = 7, r = 6, g = 10, b = 9;
+  const int pushButton = 7, r = 10, g = 9, b = 6;
 } pin;
 
 struct ButtonConfig { // Objects specific to the functionality and features with the button.
@@ -67,8 +67,8 @@ struct ButtonConfig { // Objects specific to the functionality and features with
 } button;
 
 struct LCDConfig { // Sets up the LCD to have predefined lines for buffering
-  char line0[21];
-  char line1[21];
+  char line0[17]; // extra index 16+1 for the null char at the end
+  char line1[17]; // ...
 } lcd_config;
 LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7); // defining the LCD screen pins
 
@@ -174,8 +174,8 @@ void pin_setup() {
   // Initializes the digital board pins for I/O
   pinMode(pin.pushButton, INPUT); // sets button to read input
   pinMode(pin.r, OUTPUT); // sets RGB light pins to output
-  pinMode(pin.g, OUTPUT);
-  pinMode(pin.b, OUTPUT);
+  pinMode(pin.g, OUTPUT); // ...
+  pinMode(pin.b, OUTPUT); // ...
   for (int i = pin.d4; i <= pin.d7; i++) { // Iterating pin setup for LCD pins
     pinMode(i, OUTPUT);
   }
@@ -200,8 +200,8 @@ void update_display() {
   lcd.print(lcd_config.line1); // ...
 }
 
-// Sets the color of the RGB light
-void set_color(int R, int G, int B, int A) { 
+// Sets the color of the RGB light where rgb(0-255, 0-255, 0-255)
+void set_color(int R, int G, int B) { 
   analogWrite(pin.r, R);
   analogWrite(pin.b, B);
   analogWrite(pin.g, G);
@@ -226,14 +226,23 @@ void check_press() {
   }
 
   if (button.isPressed) { // only for setting the light to white when pressed
-    set_color(255, 255, 255, 1); // rgb light indicator for presses -> r#, g#, b#
+    set_color(100, 100, 100); // rgb light indicator for presses -> r#, g#, b#
   } else {
-    set_color(0, 0, 0, 0); // default turns off the RGB light indicator -> r#, g#, b#
+    set_color(0, 0, 0); // default turns off the RGB light indicator -> r#, g#, b#
   }
 
   // calculating the duration of presses and releases for morse code
   button.pressDuration = button.currentReleaseTime - button.currentPressTime; // calculates duration based on 'current' vars
   button.releaseDuration = button.currentPressTime - button.lastReleaseTime; // calculates release duration based on 'current' press and 'last' release
+}
+
+void clear_input() {
+  morseCodeInput.clear(); // clears the user's input in array
+  morseCodeJoined = ""; // clears the content of any joined chars from morseCodeInput
+}
+
+String check_input() { // Based on 'check_press' vars, defines the different durations of presses/releases
+  // checks for short vs long presses as '0' or '1'
 }
 
 // Runs only once when the board turns on
@@ -249,8 +258,7 @@ void setup() {
 
 // Runs the whole time when the board is on
 void loop() { 
-  morseCodeInput.clear(); // clears the user's input in array
-  morseCodeJoined = ""; // clears the content of any joined chars from morseCodeInput
   check_press();
+  check_input();
   update_display();
 }
