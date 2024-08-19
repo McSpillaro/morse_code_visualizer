@@ -2,6 +2,12 @@
   "C_Cpp.errorSquiggles": "enabled",
   "files.associations": {
     "vector": "cpp",
-    "string": "cpp"
+    "string": "cpp",
+    "associative_base": "cpp",
+    "deque": "cpp",
+    "initializer_list": "cpp",
+    "iterator": "cpp",
+    "list": "cpp",
+    "serstream": "cpp"
   }
 }

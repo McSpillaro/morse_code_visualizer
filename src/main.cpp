@@ -1,10 +1,3 @@
-// All libraries are installed from PlatformIO libraries onto the project (not sys dependent)
-#include <Arduino.h>
-#include <LiquidCrystal.h>
-#include <ArduinoSTL.h>
-#include <vector>
-#include <string>
-
 /*
 LiquidCrystalDisplay (LCD) - Morse Code
 
@@ -12,7 +5,7 @@ Displays the inputted morse code letters on the LCD panel.
 This sketch takes input from a button and displays proper characters
 that correspond to the proper morse code.
 
-After holding the button for 'x' amount of time, it will clear the display.
+After holding the button for 2 seconds, it will clear the display.
 
 The circuit (LCD module):
  * LCD RS pin to digital pin 12
@@ -34,13 +27,20 @@ The circuit (Button & RGB light):
  * D1 pin 4 to digital pin 9
 */
 
+// All libraries are installed from PlatformIO libraries onto the project (not sys dependent)
+#include <Arduino.h>
+#include <LiquidCrystal.h>
+#include <ArduinoSTL.h>
+#include <vector>
+#include <string>
+
 struct PinConfig { // Objects specific to the board's I/O pin layout and configuration.
   // Defining the variables for the digital pin I/O on LCD
   const int rs = 12, en = 11;
   const int d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 
   // Defining the variables for the digital pin I/O on RGB & Button
-  const int pushButton = 7, r = 13, g = 10, b = 9;
+  const int pushButton = 7, r = 6, g = 10, b = 9;
 } pin;
 
 struct ButtonConfig { // Objects specific to the functionality and features with the button.
@@ -82,7 +82,7 @@ void add(String key, String value) {
   mapSize++; // after new key-value is added, increments by 1 (essentially moving index to next available spot in the array)
 }
 
-// Searches and fetches for the key in the 'alphabet' and returns its value if found.
+// Searches and fetche     s for the key in the 'alphabet' and returns its value if found.
 String get(String key) {
   for (int i = 0; i < mapSize; i++) { // loops through each index in 'alphabet' 
     if (alphabet[i].key == key) {  // checks if the key is a match
@@ -179,7 +179,6 @@ void set_color(int R, int G, int B) {
 
 // Runs only once when the board turns on
 void setup() {
-  set_color(0, 0, 0); // turns off the led initially
   pin_setup(); // runs function to setup pins
 
   // Adding the appropriate key-value pairs for the morse code and alphabet
@@ -188,7 +187,7 @@ void setup() {
   }
 
   // Setting up the LCD settings
-  lcd.begin(16, 2); // defines number of columns, rows
+  lcd.begin(16, 1); // defines number of columns, rows
   lcd.leftToRight(); // go left for the next letters
   // Turn off the display:
   lcd.noDisplay();
@@ -200,10 +199,7 @@ void setup() {
 
 // Runs the whole time when the board is on
 void loop() { 
-  userOutput.redValue = 0;
-  userOutput.greenValue = 0;
-  userOutput.blueValue = 0;
-  set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
+  set_color(0, 0, 0); // turns off the led
   morseCodeInput.clear(); // clears the user's input in array
   morseCodeJoined = ""; // clears the content of any joined code as a string
 
@@ -233,27 +229,31 @@ void loop() {
     }
   }
 
-  int inputLength = morseCodeInput.size(); // checks the size of the user's input
-  
-  if (inputLength <= 4) {  // processes button presses if the length of input code is less than 4
-    if (button.pressDuration <= 500) { // checks the button press duration
-      if (button.pressDuration <= 250) { // checks for short press
-        morseCodeInput.push_back(button.shortPress); // adds the char shortPress '0' to user input array
-      } else { // long press
-        morseCodeInput.push_back(button.longPress); // adds the char longPress '1' to user input array
-      }
-    } else { // if press was too long
-      userOutput.morseCodeOutput = combineInput(morseCodeInput); // finds matching letter corresponding to input code
-      
-      // if the morse code was not found
-      if (userOutput.morseCodeOutput == "Invalid Code") {
-        userOutput.redValue = 255;
-        userOutput.greenValue = 0;
-        userOutput.blueValue = 0;
-        set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
-      }
+  // int inputLength = morseCodeInput.size(); // checks the size of the user's input
+
+  if (button.pressDuration <= 500) { // checks the button press duration
+    if (button.pressDuration <= 250) { // checks for short press
+      morseCodeInput.push_back(button.shortPress); // adds the char shortPress '0' to user input array
+      set_color(255, 255, 255);  // sets color to white indicating button press
+    } else { // long press
+      morseCodeInput.push_back(button.longPress); // adds the char longPress '1' to user input array
     }
+  } else { // if press was too long
+    userOutput.morseCodeOutput = combineInput(morseCodeInput); // finds matching letter corresponding to input code
     
+    // if the morse code was not found, turn red
+    if (userOutput.morseCodeOutput == "Invalid Code") {
+      userOutput.redValue = 255;
+      userOutput.greenValue = 0;
+      userOutput.blueValue = 0;
+      set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
+    } else { // if it was found, turn green
+      userOutput.redValue = 0;
+      userOutput.greenValue = 255;
+      userOutput.blueValue = 0;
+      set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
+    }
+  
     // if the duration since last press is too long (and if duration of press was valid)
     if (button.pressNotDuration >= 500) {
       userOutput.morseCodeOutput = combineInput(morseCodeInput); // finds matching letter corresponding to input code
@@ -280,10 +280,5 @@ void loop() {
 
   // Display output:
   lcd.setCursor(0, 0); // set the cursor to top left
-  lcd.autoscroll(); // scrolls the output to the right of the display
-  userOutput.redValue = 0;
-  userOutput.greenValue = 255;
-  userOutput.blueValue = 0;
-  set_color(userOutput.redValue, userOutput.greenValue, userOutput.blueValue); // rgb light indicator
-  lcd.print(userOutput.morseCodeOutput); // display the output letter on LCD screen
+  if (userOutput.morseCodeOutput != "Invalid Code") {lcd.print(userOutput.morseCodeOutput); } // displays letter on screen
 }
