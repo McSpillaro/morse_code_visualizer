@@ -60,6 +60,10 @@ struct ButtonConfig { // Objects specific to the functionality and features with
   const unsigned long debounceDelay = 50; // debounce time in milliseconds
   char shortPress = '0'; // defines the short press as char 0 
   char longPress = '1'; // defines the long press as char 1
+  int avgPressDuration = 0; // defines the average press duration for total button presses
+  int stdPressDuration = 0; // defines the standard deviation duration for all button presses
+  int avgReleaseDuraiton = 0; // defines the average release duration for total releases
+  int stdReleaseDuraiton = 0; // defines the standard deviation release duration for total releases
 } button;
 
 struct LCDConfig { // Sets up the LCD to have predefined lines for buffering
@@ -77,7 +81,10 @@ struct MorseCode { // Declares a dictionary which is used to store the specific 
   String value; // corresponding letter
 } alphabet[26]; // An array map to hold the key-value pairs.
 
-char morseCodeInput[6] = ""; // Stores morse code input; array size of 6 used to have 4 for code, 1 for null, and 1 for a buffer
+// Morse code duration arrays
+const int MAX_DURATION_SIZE = 4;
+const int* releaseDurations[MAX_DURATION_SIZE] = {};
+const int* pressDurations[MAX_DURATION_SIZE] = {};
 
 // Morse code and alphabet stored in program memory
 const char* morseCode[] PROGMEM = {
@@ -86,8 +93,20 @@ const char* morseCode[] PROGMEM = {
   "1101", "010", "000", "1", "001", "0001", "011", "1001", 
   "1011", "1100"
 };
-
 const char alphabet[] PROGMEM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+const int MAX_INPUT_SIZE = 5; // Max input size for morse code (4), which includes the buffer (1)
+char morseCodeInput[MAX_INPUT_SIZE] = ""; // Stores morse code input
+bool addToMorseCode(char* array, char newChar) {
+  int length = strlen(array);
+  if (length < MAX_INPUT_SIZE - 2) { // Ensure there is space fo teh new character and null terminator
+    array[length] = newChar; // Adds the new character to the string
+    array[length + 1] = '\0'; // Null-terminate the string
+    return true; // Successfully added
+  } else {
+    return false; // The array is full
+  }
+}
 
 // Function to get the corresponding letter for a Morse code from program memory
 char getLetterFromMorse(const char* code) {
@@ -168,8 +187,10 @@ void check_press() {
   button.releaseDuration = button.currentPressTime - button.lastReleaseTime; // calculates release duration based on 'current' press and 'last' release
 }
 
-void clear_input() {
+void clear_input() { // Clears the arrays 'morseCodeInput' and '...Duration' by clearing the memory
   memset(morseCodeInput, 0, sizeof(morseCodeInput)); // clears the user's input in array
+  memset(releaseDurations, 0, sizeof(releaseDurations)); // clears the data storing the memory for release durations
+  memset(pressDurations, 0, sizeof(pressDurations)); // clears the data storing the memory for press durations
 }
 
 void check_input() { // Based on 'check_press' vars, defines the different durations of presses/releases
