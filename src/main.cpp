@@ -58,12 +58,16 @@ struct ButtonConfig { // Objects specific to the functionality and features with
   unsigned long pressDuration = 0; // stores the duration of the button press
   unsigned long releaseDuration = 0; // stores duration of button not being pressed
   const unsigned long debounceDelay = 50; // debounce time in milliseconds
+  const unsigned long shortPressHardCap = 150; // hard cap in ms for short presses
+  const unsigned long longPressHardCap = 300; // hard cap in ms for long presses
+
   char shortPress = '0'; // defines the short press as char 0 
   char longPress = '1'; // defines the long press as char 1
-  int avgPressDuration = 0; // defines the average press duration for total button presses
-  int stdPressDuration = 0; // defines the standard deviation duration for all button presses
-  int avgReleaseDuraiton = 0; // defines the average release duration for total releases
-  int stdReleaseDuraiton = 0; // defines the standard deviation release duration for total releases
+
+  float avgPressDuration = 0.; // defines the average press duration for total button presses
+  float stdPressDuration = 0.; // defines the standard deviation duration for all button presses
+  float avgReleaseDuration = 0.; // defines the average release duration for total releases
+  float stdReleaseDuration = 0.; // defines the standard deviation release duration for total releases
 } button;
 
 struct LCDConfig { // Sets up the LCD to have predefined lines for buffering
@@ -76,16 +80,6 @@ struct Output { // All output on the board like the LCD screen
   String morseCodeOutput; // letter for corresponding morse code
 } userOutput;
 
-struct MorseCode { // Declares a dictionary which is used to store the specific key (morse code pattern) and value (letter).
-  String key; // morse code
-  String value; // corresponding letter
-} alphabet[26]; // An array map to hold the key-value pairs.
-
-// Morse code duration arrays
-const int MAX_DURATION_SIZE = 4;
-const int* releaseDurations[MAX_DURATION_SIZE] = {};
-const int* pressDurations[MAX_DURATION_SIZE] = {};
-
 // Morse code and alphabet stored in program memory
 const char* morseCode[] PROGMEM = {
   "01", "1000", "1010", "100", "0", "0010", "110", "0000", 
@@ -97,14 +91,29 @@ const char alphabet[] PROGMEM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 const int MAX_INPUT_SIZE = 5; // Max input size for morse code (4), which includes the buffer (1)
 char morseCodeInput[MAX_INPUT_SIZE] = ""; // Stores morse code input
+// Morse code duration arrays
+int pressDurations[MAX_INPUT_SIZE - 1] = {};
+int releaseDurations[MAX_INPUT_SIZE - 1] = {};
+
 bool addToMorseCode(char* array, char newChar) {
   int length = strlen(array);
-  if (length < MAX_INPUT_SIZE - 2) { // Ensure there is space fo teh new character and null terminator
+  if (length < MAX_INPUT_SIZE - 2) { // Ensure there is space for the new character and null terminator
     array[length] = newChar; // Adds the new character to the string
     array[length + 1] = '\0'; // Null-terminate the string
     return true; // Successfully added
   } else {
     return false; // The array is full
+  }
+}
+
+bool addToDurationArray(int* array, int dataPoint) { // Adds press or release duration data point to specified array
+  int length = sizeof(array); // gets length of array by size
+  if (length < MAX_INPUT_SIZE - 2) // Ensures there is space for the new datapoint
+  {
+    array[length] = dataPoint; // Adds the data point to the array
+    return true; // Successfully added datapoint
+  } else {
+    return false; // The array is full of data points
   }
 }
 
@@ -185,6 +194,28 @@ void check_press() {
   // calculating the duration of presses and releases for morse code
   button.pressDuration = button.currentReleaseTime - button.currentPressTime; // calculates duration based on 'current' vars
   button.releaseDuration = button.currentPressTime - button.lastReleaseTime; // calculates release duration based on 'current' press and 'last' release
+  addToDurationArray(pressDurations, button.pressDuration); // adds datapoint to array
+  addToDurationArray(releaseDurations, button.releaseDuration); // ...
+}
+
+float averageArray(int* array) {
+  int sum = 0;
+  for (int i = 0; i < sizeof(array); i++) { // loops through the array
+    sum += array[i]; // adds the datapoint into the array
+  }
+  float avgResult = sum / sizeof(array); // calculates the average of array
+  return avgResult;
+}
+
+float stdArray(int* array) {
+  int arraySize = sizeof(array); // gets the size of the array
+  float sum = 0.; // sum of the squared datapoint - average of array
+  float stdResult = 0; // initialize var to hold the result of standard deviation
+  for (int i = 0; i < sizeof(array); i++) { // loops times the size of array
+    sum += (array[i] - averageArray(array)) * (array[i] - averageArray(array)); // sum of squared data points - average
+  }
+  stdResult = sqrt(sum / (arraySize - 1)); // calculates standard deviation
+  return stdResult;
 }
 
 void clear_input() { // Clears the arrays 'morseCodeInput' and '...Duration' by clearing the memory
@@ -195,6 +226,8 @@ void clear_input() { // Clears the arrays 'morseCodeInput' and '...Duration' by 
 
 void check_input() { // Based on 'check_press' vars, defines the different durations of presses/releases
   // Logic to process Morse code input and determine if it's a short or long press
+  button.avgPressDuration = averageArray(pressDurations);
+  button.avgReleaseDuration = averageArray(releaseDurations);
 }
 
 // Runs only once when the board turns on
