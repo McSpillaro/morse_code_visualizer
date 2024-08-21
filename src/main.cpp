@@ -30,15 +30,11 @@ The circuit (Button & RGB light):
 // All libraries are installed from PlatformIO libraries onto the project (not sys dependent)
 #include <Arduino.h>
 #include <LiquidCrystal.h>
-#include <ArduinoSTL.h>
-#include <vector>
-#include <string>
+#include <avr/pgmspace.h>
 
 struct PinConfig { // Objects specific to the board's I/O pin layout and configuration.
-  // Defining the variables for the digital pin I/O on LCD
-  const int rs = 12, en = 11;
-  const int d4 = 5, d5 = 4, d6 = 3, d7 = 2;
-
+  // Defining the variables for the digital pin I/O on LCD and RGB light
+  const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
   // Defining the variables for the digital pin I/O on RGB & Button
   const int pushButton = 7, r = 10, g = 9, b = 6;
 } pin;
@@ -54,7 +50,7 @@ struct ButtonConfig { // Objects specific to the functionality and features with
     * next button release
   */
 
-  bool isPressed; // boolean value for whether or not the button is pressed
+  bool isPressed = false; // boolean value for whether or not the button is pressed
   unsigned long currentPressTime = 0; // to track the time of the current button press
   unsigned long currentReleaseTime = 0; // to track the time of the button the moment it is released
   unsigned long lastPressTime = 0; // to track the time of the last button press
@@ -67,8 +63,8 @@ struct ButtonConfig { // Objects specific to the functionality and features with
 } button;
 
 struct LCDConfig { // Sets up the LCD to have predefined lines for buffering
-  char line0[17]; // extra index 16+1 for the null char at the end
-  char line1[17]; // ...
+  char line0[17] = ""; // extra index 16+1 for the null char at the end
+  char line1[17] = ""; // ...
 } lcd_config;
 LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7); // defining the LCD screen pins
 
@@ -81,93 +77,28 @@ struct MorseCode { // Declares a dictionary which is used to store the specific 
   String value; // corresponding letter
 } alphabet[26]; // An array map to hold the key-value pairs.
 
-int mapSize = 0; // keeps track of the current number of elements (key-value pairs) in the alphabet[]
+char morseCodeInput[6] = ""; // Stores morse code input; array size of 6 used to have 4 for code, 1 for null, and 1 for a buffer
 
-std::vector<char> morseCodeInput; // Collects the user's input from the button for morse code detection.
-String morseCodeJoined; // Takes the user input and then joins them as one string
+// Morse code and alphabet stored in program memory
+const char* morseCode[] PROGMEM = {
+  "01", "1000", "1010", "100", "0", "0010", "110", "0000", 
+  "00", "0111", "101", "0100", "11", "10", "111", "0110", 
+  "1101", "010", "000", "1", "001", "0001", "011", "1001", 
+  "1011", "1100"
+};
 
-// Adds a new key-value pair to the 'alphabet' array map.
-void add(String key, String value) {
-  alphabet[mapSize].key = key; // assigns provided key to the key field at current index (mapSize)
-  alphabet[mapSize].value = value; // assigns provided value to the associated key in the value field at current index (mapSize)
-  mapSize++; // after new key-value is added, increments by 1 (essentially moving index to next available spot in the array)
-}
+const char alphabet[] PROGMEM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-// Searches and fetche     s for the key in the 'alphabet' and returns its value if found.
-String get(String key) {
-  for (int i = 0; i < mapSize; i++) { // loops through each index in 'alphabet' 
-    if (alphabet[i].key == key) {  // checks if the key is a match
-      return alphabet[i].value; // returns the correct value corresponding to the key
+// Function to get the corresponding letter for a Morse code from program memory
+char getLetterFromMorse(const char* code) {
+  for (int i = 0; i < 26; i++) { // Loops through alphabet[] array
+    if (strcmp_P(code, (char*)pgm_read_word(&(morseCode[i]))) == 0)
+    {                                       // Compares RAM-based 'code' string to 'alphabet' flash memory string; returns 0 if a match
+      return pgm_read_byte(&(alphabet[i])); // Address of the morse code string for the letter at index 'i' in the 'morseCode' memory
     }
   }
-  return "Invalid Code"; // if the key did not match anything
+  return '?'; // Return '?' if no match found
 }
-
-String combine(std::vector<char> input) { // Combines the separated indexes of the input into one string
-  morseCodeJoined = ""; // Ensure it's cleared before use
-  for (char c : input) { // iterates over the user morse code input
-    morseCodeJoined += c; // joins the separated morse code inputs into one string code
-  }
-  String result = get(morseCodeJoined);
-  return result;
-}
-
-String code[26] = {  // Array of size 26 containing all code patterns; in order of A-Z
-  "01",
-  "1000",
-  "1010",
-  "100",
-  "0",
-  "0010",
-  "110",
-  "0000",
-  "00",
-  "0111",
-  "101",
-  "0100",
-  "11",
-  "10",
-  "111",
-  "0110",
-  "1101",
-  "010",
-  "000",
-  "1",
-  "001",
-  "0001",
-  "011",
-  "1001",
-  "1011",
-  "1100"
-};
-String letter[26] = { // Array of size 26 containing each letter of the alphabet; in order of A-Z
-  "A", 
-  "B", 
-  "C", 
-  "D", 
-  "E", 
-  "F", 
-  "G", 
-  "H", 
-  "I", 
-  "J", 
-  "K", 
-  "L", 
-  "M", 
-  "N", 
-  "O", 
-  "P", 
-  "Q", 
-  "R", 
-  "S", 
-  "T", 
-  "U", 
-  "V", 
-  "W", 
-  "X", 
-  "Y", 
-  "Z"
-};
 
 // Function to setup the digital pins for I/O
 void pin_setup() {
@@ -184,7 +115,7 @@ void pin_setup() {
 // Function to setup the LCD
 void lcd_setup() {
   // Setting up the LCD settings
-  lcd.begin(16, 1); // defines number of columns, rows
+  lcd.begin(16, 2); // defines number of columns, rows
   lcd.leftToRight(); // go left for the next letters
   // Turn off the display:
   lcd.noDisplay();
@@ -197,6 +128,7 @@ void lcd_setup() {
 void update_display() {
   lcd.setCursor(0, 0); // sets cursor to default position
   lcd.print(lcd_config.line0); // handles actual printing
+  lcd.setCursor(0, 1);
   lcd.print(lcd_config.line1); // ...
 }
 
@@ -237,21 +169,15 @@ void check_press() {
 }
 
 void clear_input() {
-  morseCodeInput.clear(); // clears the user's input in array
-  morseCodeJoined = ""; // clears the content of any joined chars from morseCodeInput
+  memset(morseCodeInput, 0, sizeof(morseCodeInput)); // clears the user's input in array
 }
 
-String check_input() { // Based on 'check_press' vars, defines the different durations of presses/releases
-  // checks for short vs long presses as '0' or '1'
+void check_input() { // Based on 'check_press' vars, defines the different durations of presses/releases
+  // Logic to process Morse code input and determine if it's a short or long press
 }
 
 // Runs only once when the board turns on
 void setup() {
-  // Adding the appropriate key-value pairs for the morse code and alphabet
-  for (int i = 0; i < 26; i++) {
-    add(code[i], letter[i]);
-  }
-
   pin_setup(); // runs function to setup pins
   lcd_setup(); // runs function to setup lcd
 }
