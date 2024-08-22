@@ -69,14 +69,15 @@ struct ButtonConfig { // Objects specific to the functionality and features with
   float stdReleaseDuration = 0.; // defines the standard deviation release duration for total releases
 } button;
 
+const int MAX_LCD_SLOTS = 17; // the max amount of slots for a single lcd row
 struct LCDConfig { // Sets up the LCD to have predefined lines for buffering
-  char line0[17] = ""; // extra index 16+1 for the null char at the end
-  char line1[17] = ""; // ...
+  char line0[MAX_LCD_SLOTS] = ""; // extra index 16+1 for the null char at the end
+  char line1[MAX_LCD_SLOTS] = ""; // ...
 } lcd_config;
 LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7); // defining the LCD screen pins
 
 struct Output { // All output on the board like the LCD screen
-  char* morseCodeOutput; // letter for corresponding morse code
+  char morseCodeOutput; // letter for corresponding morse code
 } userOutput;
 
 // Morse code and alphabet stored in program memory
@@ -119,7 +120,7 @@ bool addToDurationArray(int* array, int dataPoint) { // Adds press or release du
 }
 
 // Function to get the corresponding letter for a Morse code from program memory
-char getLetterFromMorse(const char* code) {
+char getLetterFromMorse(char* code) {
   for (int i = 0; i < 26; i++) { // Loops through alphabet[] array
     if (strcmp_P(code, (char*)pgm_read_word(&(morseCode[i]))) == 0)
     {                                       // Compares RAM-based 'code' string to 'alphabet' flash memory string; returns 0 if a match
@@ -153,17 +154,28 @@ void lcd_setup() {
   lcd.display();
 }
 
-void lcd_scroll(char* letter) {
-  int length0 = strlen(lcd_config.line0); // length of the array for the respective line on the lcd
-  int length1 = strlen(lcd_config.line1); // ...
+void lcd_scroll(char letter) {
+  int length0 = strlen(lcd_config.line0); // length of the array for the top row on the lcd
+  int length1 = strlen(lcd_config.line1); // length of the array for the bottom row on the lcd
+  
+  lcd_config.line0[0] = letter; // updates the 1st column, 1st row slot with the letter
+  
+  if (length1 == 0 && length0 > 0) { // if the second/bottom row on the lcd is empty but the top row has characters
+    for (int i = 0; i < length0; i++) { // goes through each filled slot in the 1st lcd row
+      if (length0 == MAX_LCD_SLOTS - 1) { // if the 1st row of the lcd is full
+        
+      } else {
+        lcd_config.line0[i+1] = lcd_config.line0[i];
+      }
+    }
+    if (length0 == MAX_LCD_SLOTS - 1) {
 
-  if (length1 == 0) { // if the second/bottom row on the lcd is empty
-    
+    }
   }
 }
 
 // Updates the display of the LCD including the buffer
-void update_display(char* letter) {
+void update_display(char letter) {
   lcd_scroll(letter);
   lcd.setCursor(0, 0); // sets cursor to default position
   lcd.print(lcd_config.line0); // handles actual printing
