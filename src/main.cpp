@@ -58,8 +58,7 @@ struct ButtonConfig { // Objects specific to the functionality and features with
   unsigned long pressDuration = 0; // stores the duration of the button press
   unsigned long releaseDuration = 0; // stores duration of button not being pressed
   const unsigned long debounceDelay = 50; // debounce time in milliseconds
-  const unsigned long shortPressHardCap = 150; // hard cap in ms for short presses
-  const unsigned long longPressHardCap = 300; // hard cap in ms for long presses
+  const unsigned long clearScreenThreshold = 2000; // hold button for 2 seconds to clear lcd
 
   char shortPress = '0'; // defines the short press as char 0 
   char longPress = '1'; // defines the long press as char 1
@@ -77,7 +76,7 @@ struct LCDConfig { // Sets up the LCD to have predefined lines for buffering
 LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7); // defining the LCD screen pins
 
 struct Output { // All output on the board like the LCD screen
-  String morseCodeOutput; // letter for corresponding morse code
+  char* morseCodeOutput; // letter for corresponding morse code
 } userOutput;
 
 // Morse code and alphabet stored in program memory
@@ -90,12 +89,14 @@ const char* morseCode[] PROGMEM = {
 const char alphabet[] PROGMEM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 const int MAX_INPUT_SIZE = 5; // Max input size for morse code (4), which includes the buffer (1)
-char morseCodeInput[MAX_INPUT_SIZE] = ""; // Stores morse code input
+
+// Stores morse code input
+char morseCodeInput[MAX_INPUT_SIZE] = ""; 
 // Morse code duration arrays
 int pressDurations[MAX_INPUT_SIZE - 1] = {};
 int releaseDurations[MAX_INPUT_SIZE - 1] = {};
 
-bool addToMorseCode(char* array, char newChar) {
+bool addToMorseCode(char* array, char newChar) { // Adds corresponding short press '0' or long press '1' to the array for holding morse code press patterns before defining a specific character letter to output
   int length = strlen(array);
   if (length < MAX_INPUT_SIZE - 2) { // Ensure there is space for the new character and null terminator
     array[length] = newChar; // Adds the new character to the string
@@ -152,8 +153,18 @@ void lcd_setup() {
   lcd.display();
 }
 
+void lcd_scroll(char* letter) {
+  int length0 = strlen(lcd_config.line0); // length of the array for the respective line on the lcd
+  int length1 = strlen(lcd_config.line1); // ...
+
+  if (length1 == 0) { // if the second/bottom row on the lcd is empty
+    
+  }
+}
+
 // Updates the display of the LCD including the buffer
-void update_display() {
+void update_display(char* letter) {
+  lcd_scroll(letter);
   lcd.setCursor(0, 0); // sets cursor to default position
   lcd.print(lcd_config.line0); // handles actual printing
   lcd.setCursor(0, 1);
@@ -231,6 +242,25 @@ void check_input() { // Based on 'check_press' vars, defines the different durat
   button.stdPressDuration = stdArray(pressDurations, button.avgPressDuration); // calculates standard deviation durations based on calculated avg
   button.stdReleaseDuration = stdArray(releaseDurations, button.avgReleaseDuration); // ... 
   
+  float thresholdMultiplier = 1.5; // threshold for standard deviation (tunable)
+
+  // Determine whether or not the current press is short or long
+  if (button.pressDuration <= button.avgPressDuration + thresholdMultiplier * button.stdPressDuration) {
+    addToMorseCode(morseCodeInput, button.shortPress); // short press
+  } else {
+    addToMorseCode(morseCodeInput, button.longPress); // long press
+  }
+
+  // Determine if the release duration indicates the end of a press vs character
+  if (button.releaseDuration > button.avgReleaseDuration + thresholdMultiplier * button.stdReleaseDuration) {
+    // Long release duration is for a pause between character inputs (different from individual press)
+    userOutput.morseCodeOutput += getLetterFromMorse(morseCodeInput); // convert the current morse code to a letter based on pattern of morse code that was input into ''morseCodeInput' array
+    clear_input(); // Clear the input to start the next character
+  }
+
+  if (button.pressDuration > button.clearScreenThreshold) {
+    lcd.clear(); // clears the lcd
+  }
 }
 
 // Runs only once when the board turns on
@@ -243,5 +273,5 @@ void setup() {
 void loop() { 
   check_press();
   check_input();
-  update_display();
+  update_display(userOutput.morseCodeOutput);
 }
