@@ -207,12 +207,12 @@ float averageArray(int* array) {
   return avgResult;
 }
 
-float stdArray(int* array) {
+float stdArray(int* array, float avg) {
   int arraySize = sizeof(array); // gets the size of the array
   float sum = 0.; // sum of the squared datapoint - average of array
   float stdResult = 0; // initialize var to hold the result of standard deviation
   for (int i = 0; i < sizeof(array); i++) { // loops times the size of array
-    sum += (array[i] - averageArray(array)) * (array[i] - averageArray(array)); // sum of squared data points - average
+    sum += (array[i] - avg) * (array[i] - avg); // sum of squared data points - average
   }
   stdResult = sqrt(sum / (arraySize - 1)); // calculates standard deviation
   return stdResult;
@@ -226,8 +226,11 @@ void clear_input() { // Clears the arrays 'morseCodeInput' and '...Duration' by 
 
 void check_input() { // Based on 'check_press' vars, defines the different durations of presses/releases
   // Logic to process Morse code input and determine if it's a short or long press
-  button.avgPressDuration = averageArray(pressDurations);
-  button.avgReleaseDuration = averageArray(releaseDurations);
+  button.avgPressDuration = averageArray(pressDurations); // calculates avg durations
+  button.avgReleaseDuration = averageArray(releaseDurations); // ...
+  button.stdPressDuration = stdArray(pressDurations, button.avgPressDuration); // calculates standard deviation durations based on calculated avg
+  button.stdReleaseDuration = stdArray(releaseDurations, button.avgReleaseDuration); // ... 
+  
 }
 
 // Runs only once when the board turns on
