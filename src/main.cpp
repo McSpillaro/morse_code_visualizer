@@ -63,6 +63,8 @@ struct ButtonConfig { // Objects specific to the functionality and features with
   char shortPress = '0'; // defines the short press as char 0 
   char longPress = '1'; // defines the long press as char 1
 
+  const int shortPressCap = 100; // Hard cap limit (100 ms) for detecting a short press
+  const int longPressCap = 300; // Hard cap limit (300 ms) for detecting a long press
   float avgPressDuration = 0.; // defines the average press duration for total button presses
   float stdPressDuration = 0.; // defines the standard deviation duration for all button presses
   float avgReleaseDuration = 0.; // defines the average release duration for total releases
@@ -257,21 +259,27 @@ void check_input() { // Based on 'check_press' vars, defines the different durat
   float thresholdMultiplier = 1.5; // threshold for standard deviation (tunable)
 
   // Determine whether or not the current press is short or long
-  if (button.pressDuration <= button.avgPressDuration + thresholdMultiplier * button.stdPressDuration) {
+  if (button.pressDuration <= button.avgPressDuration + thresholdMultiplier * button.stdPressDuration || button.pressDuration < button.shortPressCap) {
     addToMorseCode(morseCodeInput, button.shortPress); // short press
-  } else {
+  } else if (button.pressDuration <= button.avgPressDuration + thresholdMultiplier * button.stdPressDuration || button.shortPressCap < button.pressDuration < button.longPressCap) {
     addToMorseCode(morseCodeInput, button.longPress); // long press
   }
 
+  char morseCheckResult = getLetterFromMorse(morseCodeInput); // checks the returned char from the function (actual char if correct code; '?' if not)
   // Determine if the release duration indicates the end of a press vs character
-  if (button.releaseDuration > button.avgReleaseDuration + thresholdMultiplier * button.stdReleaseDuration) {
+  if (button.releaseDuration > button.avgReleaseDuration + thresholdMultiplier * button.stdReleaseDuration & morseCheckResult != '?') {
     // Long release duration is for a pause between character inputs (different from individual press)
-    userOutput.morseCodeOutput += getLetterFromMorse(morseCodeInput); // convert the current morse code to a letter based on pattern of morse code that was input into ''morseCodeInput' array
+    userOutput.morseCodeOutput += morseCheckResult; // convert the current morse code to a letter based on pattern of morse code that was input into ''morseCodeInput' array
+    set_color(0, 100, 0); // sets rgb light to green; valid input
     clear_input(); // Clear the input to start the next character
+  } else {
+    set_color(100, 0, 0); // sets rgb light to red; invalid input
+    clear_input(); // clears the input to start processing next character
   }
 
   if (button.pressDuration > button.clearScreenThreshold) {
     lcd.clear(); // clears the lcd
+    set_color(0, 0, 100); // sets rgb light to blue; clear screen indicator
   }
 }
 
