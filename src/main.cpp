@@ -59,12 +59,12 @@ struct ButtonConfig { // Objects specific to the functionality and features with
   unsigned long releaseDuration = 0; // stores duration of button not being pressed
   const unsigned long debounceDelay = 50; // debounce time in milliseconds
   const unsigned long clearScreenThreshold = 2000; // hold button for 2 seconds to clear lcd
+  const int shortPressCap = 100; // 100 ms hardcap to detect a short press
+  const int longPressCap = 300; // 300 ms hardcap to detect a long press
 
   char shortPress = '0'; // defines the short press as char 0 
   char longPress = '1'; // defines the long press as char 1
 
-  const int shortPressCap = 100; // Hard cap limit (100 ms) for detecting a short press
-  const int longPressCap = 300; // Hard cap limit (300 ms) for detecting a long press
   float avgPressDuration = 0.; // defines the average press duration for total button presses
   float stdPressDuration = 0.; // defines the standard deviation duration for all button presses
   float avgReleaseDuration = 0.; // defines the average release duration for total releases
@@ -159,15 +159,10 @@ void pin_setup() {
 
 // Function to setup the LCD
 void lcd_setup() {
-  // Setting up the LCD settings
   lcd.begin(16, 2); // defines number of columns, rows
   lcd.leftToRight(); // go left for the next letters
-  // Turn off the display:
-  lcd.noDisplay();
-  delay(500);
-  // Turn on the display:
-  lcd.display();
-  Serial.println("LCD setup complete.");
+  lcd.display(); // Turns on the display
+  Serial.println("<< LCD Setup: Complete >>");
 }
 
 void lcd_scroll(char letter) {
@@ -176,31 +171,31 @@ void lcd_scroll(char letter) {
   
   if (length0 == 0) { // if the lcd is completely fresh/blank; runs here and stops
     lcd_config.line0[0] = letter; // updates the 1st column, 1st row slot with the letter
-  } else if (length0 > 0 && length0 < 16) { // if there is room in the first row to add the letter
-    lcd_config.line0[length0] = letter; // updates the next open slot with the new letter
-  } else if (length0 == 16 && length1 == 0) { // if the first row is full but nothing in the second row; runs here and stops
-    lcd_config.line1[0] = letter; // updates the 1st column, 2nd row slot with the letter
-  } else if (length1 > 0 && length1 < 16) { // if there is room in the second row to add the letter
-    lcd_config.line1[length1] = letter; // updates the next open slot with the new letter
-  } else { // if the entire lcd screen is full; scroll down the lcd screen and add the new letter
-    strcpy(lcd_config.line0, lcd_config.line1); // top row copies bottom row's letters
-    strcpy(lcd_config.line1, ""); // bottom row is wiped blank
-    lcd_config.line1[0] = letter; // updates the 1st column, 2nd row slot with the letter
+  } else {
+    for (int i = 0; i <= length0; i++) { // goes through each filled slot in the 1st lcd row
+      lcd_config.line0[i+1] = lcd_config.line0[i]; // sets next slot to be the next to be the prev character
+      if (i+1 == MAX_LCD_SLOTS) { // if the 1st row of the lcd is full
+        lcd_config.line1[0] = lcd_config.line0[i]; // moves last character in 1st row to start of 2nd row
+        for (int j = 0; j < length1; j++) { // goes through each filled slot in the 2nd lcd row
+          lcd_config.line1[j+1] = lcd_config.line1[j]; // sets next slot to be the prev character
+        }
+      }
+    }
+    lcd_config.line0[0] = letter; // updates (0,0);(c,r) with the letter after scrolling update
   }
-
-  Serial.print("LCD Update: ");
-  Serial.print(lcd_config.line0);
-  Serial.print(" | ");
-  Serial.println(lcd_config.line1);
-  
-  lcd.clear(); // wipes the lcd screen clean and reset to add the next string of letters
-  lcd.setCursor(0, 0); // sets cursor at the 1st column, 1st row
-  lcd.print(lcd_config.line0); // prints letters in memory for the top row
-  lcd.setCursor(0, 1); // sets cursor at the 1st column, 2nd row
-  lcd.print(lcd_config.line1); // prints letters in memory for the bottom row
 }
 
-void rgb_light(String color) { // Activates the rgb led
+// Updates the display of the LCD including the buffer
+void update_display(char letter) {
+  lcd_scroll(letter);
+  lcd.setCursor(0, 0); // sets cursor to default position
+  lcd.print(lcd_config.line0); // handles actual printing
+  lcd.setCursor(0, 1);
+  lcd.print(lcd_config.line1); // ...
+}
+
+// Sets the color of the RGB light where rgb(LOW-HIGH, LOW-HIGH, LOW-HIGH)
+void rgb_light(char* color) { // Activates the rgb led
   // Turns off all lights first
   digitalWrite(pin.r, LOW);
   digitalWrite(pin.g, LOW);
@@ -227,75 +222,100 @@ void rgb_light(String color) { // Activates the rgb led
     digitalWrite(pin.g, HIGH);
     digitalWrite(pin.b, HIGH);
   }
-
-  Serial.print("RGB Light set to ");
-  Serial.println(color);
 }
 
-void check_input() {
-  // Check if the button is currently pressed
-  bool currentState = digitalRead(pin.pushButton) == HIGH;
-
-  if (currentState && !button.isPressed) {
-    // Button was just pressed
-    button.isPressed = true; // sets isPressed flag to true
-    button.currentPressTime = millis(); // sets the time of current press
-    button.pressDuration = button.currentPressTime - button.lastReleaseTime; // calculates duration between this press and the last release
-
-    Serial.print("Button pressed. Press duration: ");
-    Serial.println(button.pressDuration);
-
-    // Add press duration to the press durations array
-    addToDurationArray(pressDurations, button.pressDuration);
-
-    // Check for short press or long press
-    if (button.pressDuration < button.shortPressCap) {
-      // Short press detected
-      addToMorseCode(morseCodeInput, button.shortPress);
-    } else {
-      // Long press detected
-      addToMorseCode(morseCodeInput, button.longPress);
+// Checks for valid button presses
+void check_press() {
+  button.currentPressTime = millis(); // gets the current time 
+  
+  // general defining of necessary variables regarding button pressing times and calculations
+  if (digitalRead(pin.pushButton) == HIGH) { // if button is pressed at all
+    if (!button.isPressed && (button.currentPressTime - button.lastPressTime > button.debounceDelay)) {  // checks that this is the first time the button is pressed
+      button.isPressed = true; // sets pressed marker to 'true'
+      button.lastPressTime = button.currentPressTime; // update the time of the last press time
+      button.lastReleaseTime = button.currentReleaseTime; // updates time track of last release time after new button press
     }
-  } else if (!currentState && button.isPressed) {
-    // Button was just released
-    button.isPressed = false; // sets isPressed flag to false
-    button.currentReleaseTime = millis(); // sets the time of current release
-    button.releaseDuration = button.currentReleaseTime - button.currentPressTime; // calculates duration between this release and the current press
-
-    Serial.print("Button released. Release duration: ");
-    Serial.println(button.releaseDuration);
-
-    // Add release duration to the release durations array
-    addToDurationArray(releaseDurations, button.releaseDuration);
-
-    // Check if the release duration is long enough to end a character input
-    if (button.releaseDuration > button.longPressCap) {
-      userOutput.morseCodeOutput = getLetterFromMorse(morseCodeInput); // Get corresponding letter for the inputted morse code
-      lcd_scroll(userOutput.morseCodeOutput); // Display the output letter
-      rgb_light("green"); // Set RGB light to green
-      morseCodeInput[0] = '\0'; // Reset morse code input buffer
-      memset(pressDurations, 0, sizeof(pressDurations)); // Reset press durations array
-      memset(releaseDurations, 0, sizeof(releaseDurations)); // Reset release durations array
+    else
+    {
+      button.isPressed = false; // sets marker to 'false' when button is not pressed OR when debounce is checked
+      button.currentReleaseTime = millis(); // tracks time the moment of button release
     }
-
-    // Update last press and release times
-    button.lastPressTime = button.currentPressTime;
-    button.lastReleaseTime = button.currentReleaseTime;
   }
 
-  // Check if button is being held down to clear the LCD screen
-  if (currentState && (millis() - button.currentPressTime >= button.clearScreenThreshold)) {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("LCD Cleared");
-    rgb_light("red"); // Set RGB light to red
-    delay(500);
-    lcd.clear();
-    button.isPressed = false;
-    Serial.println("LCD screen cleared.");
+  if (button.isPressed) { // only for setting the light to white when pressed
+    set_color(HIGH, HIGH, HIGH); // sets rgb light to white if a press is confirmed
+  } else {
+    set_color(LOW, LOW, LOW); // turns off the rgb light
+  }
+
+  // calculating the duration of presses and releases for morse code
+  button.pressDuration = button.currentReleaseTime - button.currentPressTime; // calculates duration based on 'current' vars
+  button.releaseDuration = button.currentPressTime - button.lastReleaseTime; // calculates release duration based on 'current' press and 'last' release
+  addToDurationArray(pressDurations, button.pressDuration); // adds datapoint to array
+  addToDurationArray(releaseDurations, button.releaseDuration); // ...
+}
+
+float averageArray(int* array) {
+  int sum = 0;
+  for (int i = 0; i < sizeof(array); i++) { // loops through the array
+    sum += array[i]; // adds the datapoint into the array
+  }
+  float avgResult = sum / sizeof(array); // calculates the average of array
+  return avgResult;
+}
+
+float stdArray(int* array, float avg) {
+  int arraySize = sizeof(array); // gets the size of the array
+  float sum = 0.; // sum of the squared datapoint - average of array
+  float stdResult = 0; // initialize var to hold the result of standard deviation
+  for (int i = 0; i < sizeof(array); i++) { // loops times the size of array
+    sum += (array[i] - avg) * (array[i] - avg); // sum of squared data points - average
+  }
+  stdResult = sqrt(sum / (arraySize - 1)); // calculates standard deviation
+  return stdResult;
+}
+
+void clear_input() { // Clears the arrays 'morseCodeInput' and '...Duration' by clearing the memory
+  memset(morseCodeInput, 0, sizeof(morseCodeInput)); // clears the user's input in array
+  memset(releaseDurations, 0, sizeof(releaseDurations)); // clears the data storing the memory for release durations
+  memset(pressDurations, 0, sizeof(pressDurations)); // clears the data storing the memory for press durations
+}
+
+void check_input() { // Based on 'check_press' vars, defines the different durations of presses/releases
+  // Logic to process Morse code input and determine if it's a short or long press
+  button.avgPressDuration = averageArray(pressDurations); // calculates avg durations
+  button.avgReleaseDuration = averageArray(releaseDurations); // ...
+  button.stdPressDuration = stdArray(pressDurations, button.avgPressDuration); // calculates standard deviation durations based on calculated avg
+  button.stdReleaseDuration = stdArray(releaseDurations, button.avgReleaseDuration); // ... 
+  
+  float thresholdMultiplier = 1.5; // threshold for standard deviation (tunable)
+
+  // Determine whether or not the current press is short or long
+  if (button.pressDuration <= button.avgPressDuration + thresholdMultiplier * button.stdPressDuration || button.pressDuration < button.shortPressCap) {
+    addToMorseCode(morseCodeInput, button.shortPress); // short press
+  } else if (button.pressDuration <= button.avgPressDuration + thresholdMultiplier * button.stdPressDuration || button.shortPressCap < button.pressDuration < button.longPressCap) {
+    addToMorseCode(morseCodeInput, button.longPress); // long press
+  }
+
+  char morseCheckResult = getLetterFromMorse(morseCodeInput); // checks the returned char from the function (actual char if correct code; '?' if not)
+  // Determine if the release duration indicates the end of a press vs character
+  if ((button.releaseDuration > button.avgReleaseDuration + thresholdMultiplier * button.stdReleaseDuration || strlen(morseCodeInput) == MAX_INPUT_SIZE - 1) & morseCheckResult != '?') {
+    // Long release duration is for a pause between character inputs (different from individual press)
+    userOutput.morseCodeOutput += morseCheckResult; // convert the current morse code to a letter based on pattern of morse code that was input into ''morseCodeInput' array
+    set_color(LOW, HIGH, LOW); // sets rgb light to green if a valid morse code combination was detected
+    clear_input(); // Clear the input to start the next character
+  } else {
+    set_color(HIGH, LOW, LOW); // sets rgb light to red if invalid morse code combination was detected
+    clear_input(); // clears the input to start processing next character
+  }
+
+  if (button.pressDuration > button.clearScreenThreshold) {
+    lcd.clear(); // clears the lcd
+    set_color(LOW, LOW, HIGH); // sets rgb light to blue if the screen is being cleared
   }
 }
 
+// Runs only once when the board turns on
 void setup() {
   Serial.begin(9600); // Initialize serial communication at 9600 bits per second
   pin_setup(); // Call pin setup function
