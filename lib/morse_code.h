@@ -1,8 +1,8 @@
 #include <ArduinoSTL.h>
 
 class MorseCode { // Processes the logic behind the morse code input patterns. Checks for validity of input pattern (i.e. '..-.') as well as calculates short or long presses.
-    public: // Allows for objects in class to be used by other project files.
-    
+    private: // Constants accessed by only this class are private. 
+
     const char* const validPatterns[26] PROGMEM = { // Array containing (already sorted from A-Z) of valid morse code patterns where shortPress=0 and longPress=1.
     "01", "1000", "1010", "100", "0", "0010", "110", "0000", 
     "00", "0111", "101", "0100", "11", "10", "111", "0110", 
@@ -12,13 +12,9 @@ class MorseCode { // Processes the logic behind the morse code input patterns. C
 
     const char alphabet[27] PROGMEM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // Array of 'char' containing a string of the whole alphabet.
 
-    // Initializes the arrays which will handle storing the press and release durations and user input.
-    void __init__(int inputSize) { 
-        char userInput[inputSize] = "";  // Stores the user's combination of short and long presses as a single morse code input.
-        int pressDurations[inputSize - 1] = {}; // Stores the duration of the user's presses.
-        int releaseDurations[inputSize - 1] = {}; // Stores the duration of the user's releases.
-    };
 
+    public: // Allows for objects in class to be used by other project files.
+   
     // Adds user's input (i.e. "0" or "1" for short or long press) to array containing the pattern. For storing a pattern of inputs, which is later used to handle proper character detection.
     bool add_input(char* array, char newChar, int inputSize) { 
         int length = strlen(array); // The current amount of objects in the current array.
