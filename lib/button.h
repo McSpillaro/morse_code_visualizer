@@ -45,15 +45,13 @@ class Button // Handles structures and functions regarding button presses.
             buttonConfig.isPressed = true; // sets pressed marker to 'true'
             buttonConfig.lastPressTime = buttonConfig.currentPressTime; // update the time of the last press time
             buttonConfig.lastReleaseTime = buttonConfig.currentReleaseTime; // updates time track of last release time after new button press
-            }
-            else
-            {
+            } else {
             buttonConfig.isPressed = false; // sets marker to 'false' when button is not pressed OR when debounce is checked
             buttonConfig.currentReleaseTime = millis(); // tracks time the moment of button release
             }
         }
 
-        // calculating the duration of presses and releases for morse code
+        // Calculates current individual press and release durations. 
         buttonConfig.pressDuration = buttonConfig.currentReleaseTime - buttonConfig.currentPressTime; // calculates duration based on 'current' vars
         buttonConfig.releaseDuration = buttonConfig.currentPressTime - buttonConfig.lastReleaseTime; // calculates release duration based on 'current' press and 'last' release
     };
