@@ -32,44 +32,19 @@ The circuit (Button & RGB light):
 #include <LiquidCrystal.h>
 #include <avr/pgmspace.h>
 
+#include "../lib/button.h"
+#include "../lib/display.h"
+#include "../lib/morse_code.h"
+#include "../lib/rgb.h"
+
+using namespace std;
+
 struct PinConfig { // Objects specific to the board's I/O pin layout and configuration.
   // Defining the variables for the digital pin I/O on LCD and RGB light
   const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
   // Defining the variables for the digital pin I/O on RGB & Button
   const int pushButton = 7, r = 10, g = 9, b = 6;
 } pin;
-
-struct ButtonConfig { // Objects specific to the functionality and features with the button.
-  // Defining variable for button presses & time calculations
-
-  /*
-  Important moments of button functionality that needs to be tracked:
-    * initial button press
-    * initial button release
-    * next button press
-    * next button release
-  */
-
-  bool isPressed = false; // boolean value for whether or not the button is pressed
-  unsigned long currentPressTime = 0; // to track the time of the current button press
-  unsigned long currentReleaseTime = 0; // to track the time of the button the moment it is released
-  unsigned long lastPressTime = 0; // to track the time of the last button press
-  unsigned long lastReleaseTime = 0; // tracks last time the button was released
-  unsigned long pressDuration = 0; // stores the duration of the button press
-  unsigned long releaseDuration = 0; // stores duration of button not being pressed
-  const unsigned long debounceDelay = 50; // debounce time in milliseconds
-  const unsigned long clearScreenThreshold = 2000; // hold button for 2 seconds to clear lcd
-  const int shortPressCap = 100; // 100 ms hardcap to detect a short press
-  const int longPressCap = 300; // 300 ms hardcap to detect a long press
-
-  char shortPress = '0'; // defines the short press as char 0 
-  char longPress = '1'; // defines the long press as char 1
-
-  float avgPressDuration = 0.; // defines the average press duration for total button presses
-  float stdPressDuration = 0.; // defines the standard deviation duration for all button presses
-  float avgReleaseDuration = 0.; // defines the average release duration for total releases
-  float stdReleaseDuration = 0.; // defines the standard deviation release duration for total releases
-} button;
 
 const int MAX_LCD_SLOTS = 17; // the max amount of slots for a single lcd row
 struct LCDConfig { // Sets up the LCD to have predefined lines for buffering
@@ -82,88 +57,7 @@ struct Output { // All output on the board like the LCD screen
   char morseCodeOutput; // letter for corresponding morse code
 } userOutput;
 
-// Morse code and alphabet stored in program memory
-const char* const morseCode[] PROGMEM = {
-  "01", "1000", "1010", "100", "0", "0010", "110", "0000", 
-  "00", "0111", "101", "0100", "11", "10", "111", "0110", 
-  "1101", "010", "000", "1", "001", "0001", "011", "1001", 
-  "1011", "1100"
-};
-const char alphabet[] PROGMEM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
 const int MAX_INPUT_SIZE = 5; // Max input size for morse code (4), which includes the buffer (1)
-
-// Stores morse code input
-char morseCodeInput[MAX_INPUT_SIZE] = ""; 
-// Morse code duration arrays
-int pressDurations[MAX_INPUT_SIZE - 1] = {};
-int releaseDurations[MAX_INPUT_SIZE - 1] = {};
-
-bool addToMorseCode(char* array, char newChar) { // Adds corresponding short press '0' or long press '1' to the array for holding morse code press patterns before defining a specific character letter to output
-  int length = strlen(array);
-  if (length < MAX_INPUT_SIZE - 2) { // Ensure there is space for the new character and null terminator
-    array[length] = newChar; // Adds the new character to the string
-    array[length + 1] = '\0'; // Null-terminate the string
-    Serial.print("Added to morseCodeInput: ");
-    Serial.println(newChar);
-    return true; // Successfully added
-  } else {
-    Serial.println("morseCodeInput array is full.");
-    return false; // The array is full
-  }
-}
-
-bool addToDurationArray(int* array, int dataPoint) { // Adds press or release duration data point to specified array
-  int length = sizeof(array); // gets length of array by size
-  if (length < MAX_INPUT_SIZE - 2) // Ensures there is space for the new datapoint
-  {
-    array[length] = dataPoint; // Adds the data point to the array
-    Serial.print("Added to duration array: ");
-    Serial.println(dataPoint);
-    return true; // Successfully added datapoint
-  } else {
-    Serial.println("Duration array is full.");
-    return false; // The array is full of data points
-  }
-}
-
-// Function to get the corresponding letter for a Morse code from program memory
-char getLetterFromMorse(char* code) {
-  for (int i = 0; i < 26; i++) { // Loops through alphabet[] array
-    if (strcmp_P(code, (char*)pgm_read_word(&(morseCode[i]))) == 0)
-    {                                       // Compares RAM-based 'code' string to 'alphabet' flash memory string; returns 0 if a match
-      Serial.print("Morse code ");
-      Serial.print(code);
-      Serial.print(" matches letter ");
-      Serial.println((char)pgm_read_byte(&(alphabet[i])));
-      return pgm_read_byte(&(alphabet[i])); // Address of the morse code string for the letter at index 'i' in the 'morseCode' memory
-    }
-  }
-  Serial.print("Morse code ");
-  Serial.print(code);
-  Serial.println(" does not match any letter.");
-  return '?'; // Return '?' if no match found
-}
-
-// Function to setup the digital pins for I/O
-void pin_setup() {
-  // Initializes the digital board pins for I/O
-  pinMode(pin.pushButton, INPUT); // sets button to read input
-  pinMode(pin.r, OUTPUT); // sets RGB light pins to output
-  pinMode(pin.g, OUTPUT); // ...
-  pinMode(pin.b, OUTPUT); // ...
-  for (int i = pin.d4; i <= pin.d7; i++) { // Iterating pin setup for LCD pins
-    pinMode(i, OUTPUT);
-  }
-}
-
-// Function to setup the LCD
-void lcd_setup() {
-  lcd.begin(16, 2); // defines number of columns, rows
-  lcd.leftToRight(); // go left for the next letters
-  lcd.display(); // Turns on the display
-  Serial.println("<< LCD Setup: Complete >>");
-}
 
 void lcd_scroll(char letter) {
   int length0 = strlen(lcd_config.line0); // length of the array for the top row on the lcd
@@ -195,33 +89,10 @@ void update_display(char letter) {
 }
 
 // Sets the color of the RGB light where rgb(LOW-HIGH, LOW-HIGH, LOW-HIGH)
-void rgb_light(char* color) { // Activates the rgb led
-  // Turns off all lights first
-  digitalWrite(pin.r, LOW);
-  digitalWrite(pin.g, LOW);
-  digitalWrite(pin.b, LOW);
-
-  // Define the light color by setting the appropriate LED pins
-  if (color == "red") {
-    digitalWrite(pin.r, HIGH);
-  } else if (color == "green") {
-    digitalWrite(pin.g, HIGH);
-  } else if (color == "blue") {
-    digitalWrite(pin.b, HIGH);
-  } else if (color == "yellow") {
-    digitalWrite(pin.r, HIGH);
-    digitalWrite(pin.g, HIGH);
-  } else if (color == "cyan") {
-    digitalWrite(pin.g, HIGH);
-    digitalWrite(pin.b, HIGH);
-  } else if (color == "magenta") {
-    digitalWrite(pin.r, HIGH);
-    digitalWrite(pin.b, HIGH);
-  } else if (color == "white") {
-    digitalWrite(pin.r, HIGH);
-    digitalWrite(pin.g, HIGH);
-    digitalWrite(pin.b, HIGH);
-  }
+void set_color(uint8_t R, uint8_t G, uint8_t B) { 
+  digitalWrite(pin.r, R);
+  digitalWrite(pin.b, B);
+  digitalWrite(pin.g, G);
 }
 
 // Checks for valid button presses
@@ -318,8 +189,22 @@ void check_input() { // Based on 'check_press' vars, defines the different durat
 // Runs only once when the board turns on
 void setup() {
   Serial.begin(9600); // Initialize serial communication at 9600 bits per second
-  pin_setup(); // Call pin setup function
-  lcd_setup(); // Call LCD setup function
+  
+  // Initializes the digital board pins for I/O
+  pinMode(pin.pushButton, INPUT); // sets button to read input
+  pinMode(pin.r, OUTPUT); // Sets red rgb pin to output
+  pinMode(pin.g, OUTPUT); // Sets green rgb pin to output
+  pinMode(pin.b, OUTPUT); // Sets blue rgb pin to output
+  for (int i = pin.d4; i <= pin.d7; i++) { // Iterating pin setup for lcd
+    pinMode(i, OUTPUT); // Sets each digital pin for lcd to output
+  }
+  
+  // Initializes the lcd
+  lcd.begin(16, 2); // Defines number of columns, rows
+  lcd.leftToRight(); // Sets default reading/writing pattern
+  lcd.display(); // Turns on the display
+  
+  // Serial output
   Serial.println("Setup complete.");
 }
 
