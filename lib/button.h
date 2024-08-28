@@ -7,7 +7,7 @@
 class Button {// Handles structures and functions regarding button presses.
 
     private:
-    Durations::ButtonProperties button_properties; // Declaring and added the struct from durations.h
+    Durations::ButtonProperties button_properties; // Duration, state, and defintion properties of a button.
 
     public: // Allows all objects in class to be used by other project files.
     

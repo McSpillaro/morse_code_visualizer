@@ -3,7 +3,7 @@
 
 #include <ArduinoSTL.h>
 
-class Durations // Handles structures and functions regarding button presses.
+class Durations // Handles and stores structures containing necessary durations/states for multiple types of input/output.
 {
     public: // Allows all objects in class to be used by other project files.
 

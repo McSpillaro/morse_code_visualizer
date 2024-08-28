@@ -2,6 +2,7 @@
 #define MORSE_CODE_H
 
 #include <ArduinoSTL.h>
+#include "durations.h"
 
 class MorseCode { // Processes the logic behind the morse code input patterns. Checks for validity of input pattern (i.e. '..-.') as well as calculates short or long presses.
     private: // Constants accessed by only this class are private. 
