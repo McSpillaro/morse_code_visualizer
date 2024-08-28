@@ -1,3 +1,6 @@
+#ifndef DISPLAY_H
+#define DISPLAY_H
+
 #include <Arduino.h>
 #include "config.h"
 
@@ -33,3 +36,5 @@ class Display {
         lcd.print(lcd_config.line1); // ...
     };
 };
+
+#endif // DISPLAY_H

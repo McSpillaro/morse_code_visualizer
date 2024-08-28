@@ -1,3 +1,6 @@
+#ifndef MORSE_CODE_H
+#define MORSE_CODE_H
+
 #include <ArduinoSTL.h>
 
 class MorseCode { // Processes the logic behind the morse code input patterns. Checks for validity of input pattern (i.e. '..-.') as well as calculates short or long presses.
@@ -78,3 +81,5 @@ class MorseCode { // Processes the logic behind the morse code input patterns. C
 
     // 
 };
+
+#endif // MORSE_CODE_H

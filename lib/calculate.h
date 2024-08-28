@@ -1,3 +1,6 @@
+#ifndef CALCULATE_H
+#define CALCULATE_H
+
 #include <ArduinoSTL.h>
 
 class Calculate {
@@ -26,3 +29,5 @@ class Calculate {
         return stdResult;
     };
 };
+
+#endif // CALCULATE_H

@@ -1,3 +1,6 @@
+#ifndef BUTTON_H
+#define BUTTON_H
+
 #include <Arduino.h>
 
 class Button // Handles structures and functions regarding button presses.
@@ -56,3 +59,5 @@ class Button // Handles structures and functions regarding button presses.
         buttonConfig.releaseDuration = buttonConfig.currentPressTime - buttonConfig.lastReleaseTime; // calculates release duration based on 'current' press and 'last' release
     };
 };
+
+#endif // BUTTON_H

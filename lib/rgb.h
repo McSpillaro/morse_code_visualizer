@@ -1,3 +1,6 @@
+#ifndef RGB_H
+#define RGB_H
+
 class Light {
     public: // Allows for objects in class to be used by other project files.
 
@@ -15,3 +18,5 @@ class Light {
         digitalWrite(pin.b, B);
     };
 };
+
+#endif RGB_H
