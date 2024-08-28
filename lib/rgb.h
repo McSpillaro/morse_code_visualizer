@@ -19,4 +19,4 @@ class Light {
     };
 };
 
-#endif RGB_H
+#endif // RGB_H

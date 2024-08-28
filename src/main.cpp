@@ -39,7 +39,7 @@ The circuit (Button & RGB light):
 
 using namespace std;
 
-struct PinConfig { // Objects specific to the board's I/O pin layout and configuration.
+struct PinConfiguation { // Objects specific to the board's I/O pin layout and configuration.
   // Defining the variables for the digital pin I/O on LCD and RGB light.
   const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
   // Defining the variables for the digital pin I/O on RGB & Button.
@@ -47,14 +47,14 @@ struct PinConfig { // Objects specific to the board's I/O pin layout and configu
 } pin;
 
 const int MAX_LCD_SLOTS = 17; // the max amount of slots for a single lcd row
-struct LCDConfig { // Sets up the LCD to have predefined lines for buffering
+struct LcdConfiguration { // Sets up the LCD to have predefined lines for buffering
   char line0[MAX_LCD_SLOTS] = ""; // Array containing characters which will be displayed on the first row of the lcd.
   char line1[MAX_LCD_SLOTS] = ""; // Array containing characters which will be displayed on the second row of the lcd.
 } lcd_config;
 LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7); // Defines the lcd based on its pins. 
 
 const int MAX_INPUT_SIZE = 5; // Max input size for morse code (4), which includes the buffer (1)
-struct Arrays { // Contains the arrays which stores user input as well as duration array of short and long presses.
+struct InputArrays { // Contains the arrays which stores user input as well as duration array of short and long presses.
   char userInput[MAX_INPUT_SIZE] = "";  // Stores the user's combination of short and long presses as a single morse code input.
   int pressDurations[MAX_INPUT_SIZE - 1] = {}; // Stores the duration of the user's presses.
   int releaseDurations[MAX_INPUT_SIZE - 1] = {}; // Stores the duration of the user's releases.
