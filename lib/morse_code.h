@@ -2,10 +2,13 @@
 #define MORSE_CODE_H
 
 #include <ArduinoSTL.h>
-#include "durations.h"
+#include "configuration.h"
+#include "calculate.h"
 
 class MorseCode { // Processes the logic behind the morse code input patterns. Checks for validity of input pattern (i.e. '..-.') as well as calculates short or long presses.
     private: // Constants accessed by only this class are private. 
+    Configuration::ButtonProperties button_properties; // Duration, state, and defintion properties of a button.
+    Calculate calculator; // Instance of 'Calculate' class which is used to call functions from class.
 
     const char* const validPatterns[26] PROGMEM = { // Array containing (already sorted from A-Z) of valid morse code patterns where shortPress=0 and longPress=1.
     "01", "1000", "1010", "100", "0", "0010", "110", "0000", 
@@ -80,7 +83,10 @@ class MorseCode { // Processes the logic behind the morse code input patterns. C
         memset(array, 0, sizeof(array));
     };
 
-    // 
+    // Proccesses and handles the detection of user inputs whether or not they are short ('0') or long ('1') presses. Returns a boolean of 'true' (if successful input) or 'false' (if not) and adds that to user input array of morse code pattern.
+    boolean check_input() {
+        button_properties.avgPressDuration = calculator.averageArray(button_properties.)
+    }
 };
 
 #endif // MORSE_CODE_H

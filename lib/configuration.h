@@ -1,9 +1,9 @@
-#ifndef DURATIONS_H
-#define DURATIONS_H
+#ifndef CONFIGURATION_H
+#define CONFIGURATION_H
 
 #include <ArduinoSTL.h>
 
-class Durations // Handles and stores structures containing necessary durations/states for multiple types of input/output.
+class Configuration // Handles and stores structures containing necessary durations/states for multiple types of input/output.
 {
     public: // Allows all objects in class to be used by other project files.
 
@@ -37,6 +37,12 @@ class Durations // Handles and stores structures containing necessary durations/
         float avgReleaseDuration = 0.; // defines the average release duration for total releases
         float stdReleaseDuration = 0.; // defines the standard deviation release duration for total releases
     } button_properties;
+
+    struct InputArray { // Contains the arrays which stores user input as well as duration array of short and long presses.
+        char userInput[MAX_INPUT_SIZE] = "";  // Stores the user's combination of short and long presses as a single morse code input.
+        int pressDurations[MAX_INPUT_SIZE - 1] = {}; // Stores the duration of the user's presses.
+        int releaseDurations[MAX_INPUT_SIZE - 1] = {}; // Stores the duration of the user's releases.
+    } input_array;
 };
 
-#endif // DURATIONS_H
+#endif // CONFIGURATION_H
