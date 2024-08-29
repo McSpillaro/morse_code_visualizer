@@ -8,6 +8,7 @@
 class MorseCode { // Processes the logic behind the morse code input patterns. Checks for validity of input pattern (i.e. '..-.') as well as calculates short or long presses.
     private: // Constants accessed by only this class are private. 
     Configuration::ButtonProperties button_properties; // Duration, state, and defintion properties of a button.
+    Configuration::InputArray input_array; // Arrays which store user input as well the durations of presses and releases from the user.
     Calculate calculator; // Instance of 'Calculate' class which is used to call functions from class.
 
     const char* const validPatterns[26] PROGMEM = { // Array containing (already sorted from A-Z) of valid morse code patterns where shortPress=0 and longPress=1.
@@ -85,7 +86,13 @@ class MorseCode { // Processes the logic behind the morse code input patterns. C
 
     // Proccesses and handles the detection of user inputs whether or not they are short ('0') or long ('1') presses. Returns a boolean of 'true' (if successful input) or 'false' (if not) and adds that to user input array of morse code pattern.
     boolean check_input() {
-        button_properties.avgPressDuration = calculator.averageArray(button_properties.)
+        button_properties.avgPressDuration = calculator.averageArray(input_array.pressDurations); // Calculates the average of press durations
+        button_properties.avgReleaseDuration = calculator.averageArray(input_array.releaseDurations); // Calculates the average of release durations
+        button_properties.stdPressDuration = calculator.stdArray(input_array.pressDurations, button_properties.avgPressDuration); // Calculates standard deviation
+        button_properties.stdReleaseDuration = calculator.stdArray(input_array.releaseDurations, button_properties.avgReleaseDuration); // Calculates standard deviation
+
+        float threshold = 1.5; // Threshold for learned short and long press/release durations.
+        
     }
 };
 
