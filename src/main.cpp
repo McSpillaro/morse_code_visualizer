@@ -53,13 +53,6 @@ struct LcdConfiguration { // Sets up the LCD to have predefined lines for buffer
 } lcd_config;
 LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7); // Defines the lcd based on its pins. 
 
-const int MAX_INPUT_SIZE = 5; // Max input size for morse code (4), which includes the buffer (1)
-struct InputArrays { // Contains the arrays which stores user input as well as duration array of short and long presses.
-  char userInput[MAX_INPUT_SIZE] = "";  // Stores the user's combination of short and long presses as a single morse code input.
-  int pressDurations[MAX_INPUT_SIZE - 1] = {}; // Stores the duration of the user's presses.
-  int releaseDurations[MAX_INPUT_SIZE - 1] = {}; // Stores the duration of the user's releases.
-} store;
-
 void check_input() { // Based on 'check_press' vars, defines the different durations of presses/releases
   // Logic to process Morse code input and determine if it's a short or long press
   button.avgPressDuration = averageArray(pressDurations); // calculates avg durations

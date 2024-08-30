@@ -2,7 +2,6 @@
 #define DISPLAY_H
 
 #include <Arduino.h>
-#include "configuration.h"
 
 class Display {
     public: 
