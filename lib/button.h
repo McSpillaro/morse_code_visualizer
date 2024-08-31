@@ -46,7 +46,7 @@ class Button {// Handles structures and functions regarding button presses.
     public: // Allows all objects in class to be used by other project files.
     
     // Function to handle detecting valid button presses and releases. Also calculates whether or not the button is pressed or released for x amount of time (ms).
-    void check_press(int buttonPin) {
+    void calc_press(int buttonPin) {
         button_properties.currentPressTime = millis(); // gets the current time
 
         // general defining of necessary variables regarding button pressing times and calculations

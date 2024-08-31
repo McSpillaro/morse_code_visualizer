@@ -2,6 +2,7 @@
 #define MORSE_CODE_H
 
 #include <ArduinoSTL.h>
+#include <functional>
 #include "button.h"
 #include "calculate.h"
 
@@ -30,6 +31,24 @@ class MorseCode { // Processes the logic behind the morse code input patterns. C
             "1011", "1100"};
 
         const char alphabet[27] PROGMEM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // Array of 'char' containing a string of the whole alphabet.
+
+        // Function to handle short presses
+        void handleShortPress() {
+            // Adds char '0' to char* userInput
+            add_input(input_array.userInput, button_properties.shortPress);
+        };
+
+        // Function to handle long presses
+        void handleLongPress() {
+            // Adds char '1' to char* userInput
+            add_input(input_array.userInput, button_properties.longPress);
+        };
+
+        // Function to handle clearing the lcd
+        void handleHoldPress() {
+            // Clears the lcd screen
+
+        };
 
     public: 
 
@@ -94,25 +113,46 @@ class MorseCode { // Processes the logic behind the morse code input patterns. C
             memset(array, 0, sizeof(array));
         };
 
-        // Proccesses and handles the detection of user inputs whether or not they are short ('0') or long ('1') presses. Returns a boolean of 'true' (if successful input) or 'false' (if not) and adds that to user input array of morse code pattern.
-        boolean check_input() {
-            button_properties.avgPressDuration = calculator.averageArray(input_array.pressDurations); // Calculates the average of press durations
+        // Proccesses and handles the detection of user inputs whether or not they are short ('0') or long ('1') presses. Returns int '0' (if successful input) or '9' (if not) and adds that to user input array of morse code pattern.
+        int check_press() {
+            int errorCode = 0;
+
+            button_properties.avgPressDuration = calculator.averageArray(input_array.pressDurations);     // Calculates the average of press durations
             button_properties.avgReleaseDuration = calculator.averageArray(input_array.releaseDurations); // Calculates the average of release durations
             button_properties.stdPressDuration = calculator.stdArray(input_array.pressDurations, button_properties.avgPressDuration); // Calculates standard deviation
             button_properties.stdReleaseDuration = calculator.stdArray(input_array.releaseDurations, button_properties.avgReleaseDuration); // Calculates standard deviation
 
             float threshold = 1.5; // Threshold for learned short and long press/release durations.
 
-            // Determine whether or not the current press is short or long
+            // Function pointer to dynamically handle short or long presses
+            void (MorseCode::*pressHandler)() = nullptr;
 
-            // if (button_properties.pressDuration <= button_properties.avgPressDuration + threshold * button_properties.avgPressDuration || button_properties.pressDuration < button_properties.shortPressCap) {
-            //     add_input(input_array.userInput, button_properties.shortPress);
-            //     return true; // Successfully processed user input.
-            // }
-            // else if (button_properties.pressDuration >= button_properties.avgPressDuration + ) {
+            // Determines whether the current press is short or long
+            if (button_properties.pressDuration <= button_properties.avgPressDuration + threshold * button_properties.stdPressDuration || button_properties.pressDuration <= button_properties.shortPressCap) {
+                pressHandler = &MorseCode::handleShortPress;
+            } else if (button_properties.pressDuration >= button_properties.avgPressDuration + threshold * button_properties.stdPressDuration || button_properties.shortPressCap <= button_properties.pressDuration <= button_properties.longPressCap) {
+                pressHandler = &MorseCode::handleLongPress;
+            };
 
-            // }
+            // Execute the appropriate handler
+            if (pressHandler) {
+                (this->*pressHandler)();
+                return errorCode; // Successfully processed user input; returns 0
+            }
+
+            return errorCode = 9; // Did not processed user input; returns 9
         };
-};
+
+        // Processes the user's morse code pattern if it is valid compared to that defined in the array. Returns 'true' if successful.
+        boolean check_pattern() {
+            // Fetches a char (A-Z or ?) based on the user's inputted pattern.
+            char patternResult = get_letter(input_array.userInput);
+            
+            if (patterResult == '?') { // Returns boolean value if the users input pattern was a successful char or '?' (error)
+                return false; // Cannot find a valid letter based on users pattern
+            };
+
+            return true; // Successfully found letter based on users pattern
+        };
 
 #endif // MORSE_CODE_H
