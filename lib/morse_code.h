@@ -132,6 +132,7 @@ class MorseCode { // Processes the logic behind the morse code input patterns. C
                 pressHandler = &MorseCode::handleShortPress;
             } else if (button_properties.pressDuration >= button_properties.avgPressDuration + threshold * button_properties.stdPressDuration || button_properties.shortPressCap <= button_properties.pressDuration <= button_properties.longPressCap) {
                 pressHandler = &MorseCode::handleLongPress;
+            } else {
             };
 
             // Execute the appropriate handler
@@ -154,5 +155,6 @@ class MorseCode { // Processes the logic behind the morse code input patterns. C
 
             return true; // Successfully found letter based on users pattern
         };
+}
 
 #endif // MORSE_CODE_H
