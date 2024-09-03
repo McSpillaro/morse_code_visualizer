@@ -37,8 +37,9 @@ The circuit (Button & RGB light):
 #include "../lib/morse_code.hpp"
 #include "../lib/rgb.hpp"
 
+// Objects specific to the board's I/O pin layout and configuration.
 struct PinConfiguation
-{ // Objects specific to the board's I/O pin layout and configuration.
+{
   // Defining the variables for the digital pin I/O on LCD and RGB light.
   const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
   // Defining the variables for the digital pin I/O on RGB & Button.
@@ -46,6 +47,7 @@ struct PinConfiguation
 } pin;
 
 const int MAX_LCD_SLOTS = 17; // the max amount of slots for a single lcd row
+// Specific for configuaring the lcd and its corresponding rows by an array for manual changing of slots
 struct LcdConfiguration
 {                                 // Sets up the LCD to have predefined lines for buffering
   char line0[MAX_LCD_SLOTS] = ""; // Array containing characters which will be displayed on the first row of the lcd.
@@ -53,10 +55,16 @@ struct LcdConfiguration
 } lcd_config;
 LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7); // Defines the lcd based on its pins.
 
+// Creating instances of classes from header files.
+struct ClassInstances
+{
+  Button button;       // Creates instance of the class 'Button'
+  MorseCode morseCode; // Creates instance of the class 'MorseCode'
+} Instance;
+
 // Runs only once when the board turns on. Initializes the pins and sets up board to properly run.
 void setup()
 {
-  Button button; // Creates instance of the class 'Button'
 
   Serial.begin(9600); // Initialize serial communication at 9600 bits per second
 
@@ -82,5 +90,7 @@ void setup()
 // Constantly runs when the board turns on.
 void loop()
 {
-  Button::calc_press;
+  Instance.button.calc_press(pin.pushButton); // Constantly checks for button press/release
+
+  if ()
 }

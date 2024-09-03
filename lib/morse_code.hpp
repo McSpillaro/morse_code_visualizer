@@ -124,11 +124,9 @@ public:
         return '?'; // Return '?' if no match found
     };
 
-    // Proccesses and handles the detection of user inputs whether or not they are short ('0') or long ('1') presses. Returns int '8' (if successful input) or '9' (if not) and adds that to user input array of morse code pattern.
-    int check_press()
+    // Proccesses and handles the detection of user inputs whether or not they are short ('0') or long ('1') presses; returns true if successful.
+    bool check_press()
     {
-        int errorCode = 0; // Value corresponding to whether or not the user's input was proccessed correctly (8 = success, 9 = not).
-
         button_properties.avgPressDuration = calculator.averageArray(input_array.pressDurations);                                       // Calculates the average of press durations
         button_properties.avgReleaseDuration = calculator.averageArray(input_array.releaseDurations);                                   // Calculates the average of release durations
         button_properties.stdPressDuration = calculator.stdArray(input_array.pressDurations, button_properties.avgPressDuration);       // Calculates standard deviation
@@ -153,27 +151,26 @@ public:
         if (pressHandler)
         {
             (this->*pressHandler)();
-            errorCode = 8; // Successfully processed user input and adds either '0' or '1' to pattern array
+            return true; // Successful
         }
-        else
-        {
-            errorCode = 9; // No user input to process
-        }
-
-        return errorCode;
+        return false; // Not successful
     };
 
     // Processes the user's morse code pattern if it is valid compared to that defined in the array. Returns 'true' if successful.
-    boolean check_pattern()
+    bool check_pattern()
     {
         // Fetches a char (A-Z or ?) based on the user's inputted pattern.
         char patternResult = get_letter(input_array.userInput);
+
+        // Resets the arrays for new input before returning a result
+        clear_input(input_array.userInput);
+        clear_duration(input_array.pressDurations);
+        clear_duration(input_array.releaseDurations);
 
         if (patternResult == '?') // Returns boolean value if the users input pattern was a successful char or '?' (error)
         {
             return false; // Cannot find a valid letter based on users pattern
         };
-
         return true; // Successfully found letter based on users pattern
     };
 };
