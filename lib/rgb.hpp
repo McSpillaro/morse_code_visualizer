@@ -18,6 +18,9 @@ public: // Allows for objects in class to be used by other project files.
         digitalWrite(pin.r, R);
         digitalWrite(pin.g, G);
         digitalWrite(pin.b, B);
+
+        // Serial output
+        Serial.println("Indiactor successfully changed");
     };
 };
 

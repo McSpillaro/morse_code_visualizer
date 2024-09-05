@@ -5,6 +5,7 @@
 #include <functional>
 #include "button.hpp"
 #include "calculate.hpp"
+#include "rgb.hpp"
 
 // Holds the arrays specific to storing user input and processing it for morse code detection.
 class Data
@@ -28,6 +29,7 @@ private:
     Properties::ButtonProperties button_properties; // Duration, state, and defintion properties of a button.
     Data::InputArray input_array;                   // Arrays which store user input as well the durations of presses and releases from the user.
     Calculate calculator;                           // Instance of 'Calculate' class which is used to call functions from class.
+    Light indicator;                                // Allows for the light to be changed based on clear or not
 
     const char *validPatterns[26] PROGMEM = { // Array containing (already sorted from A-Z) of valid morse code patterns where shortPress=0 and longPress=1.
         "01", "1000", "1010", "100", "0", "0010", "110", "0000",
@@ -56,6 +58,7 @@ private:
     {
         // Sets marker to 'true' for final input
         button_properties.inputFinal = true;
+        indicator.color(HIGH, LOW, HIGH); // Sets indicator rgb to purple
     };
 
     // Handles when the user is ready to clear the screen
@@ -63,9 +66,12 @@ private:
     {
         // Sets marker to 'true' for a go to clear the screen
         button_properties.inputClearFinal = true;
+        indicator.color(LOW, LOW, HIGH); // Sets indicator rgb to blue
     };
 
 public:
+    char patternResult; // Holds the final character (A-Z).
+
     // Adds user's input (i.e. "0" or "1" for short or long press) to array containing the pattern. For storing a pattern of inputs, which is later used to handle proper character detection.
     bool add_input(char *array, char newChar)
     {
@@ -187,7 +193,7 @@ public:
     bool check_pattern()
     {
         // Fetches a char (A-Z or ?) based on the user's inputted pattern.
-        char patternResult = get_letter(input_array.userInput);
+        patternResult = get_letter(input_array.userInput);
 
         // Resets the arrays for new input before returning a result
         clear_input(input_array.userInput);

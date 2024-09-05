@@ -5,7 +5,7 @@
 
 class Display
 {
-public:
+private:
     void lcd_scroll(char letter)
     {
         int length0 = strlen(lcd_config.line0); // length of the array for the top row on the lcd
@@ -33,14 +33,15 @@ public:
         }
     };
 
+public:
     // Updates the display of the LCD including the buffer
     void update_display(char letter)
     {
         lcd_scroll(letter);
-        lcd.setCursor(0, 0);         // sets cursor to default position
-        lcd.print(lcd_config.line0); // handles actual printing
-        lcd.setCursor(0, 1);
-        lcd.print(lcd_config.line1); // ...
+        lcd.setCursor(0, 0);         // Sets cursor to the upper left corner (1st column, 1st row)
+        lcd.print(lcd_config.line0); // Prints to the top row
+        lcd.setCursor(0, 1);         // Sets cursor to the bottom left corner (1st column, 2nd row)
+        lcd.print(lcd_config.line1); // Prints to the bottom row
     };
 };
 

@@ -62,12 +62,13 @@ struct ClassInstances
   Properties::ButtonProperties button_properties; // Creates instance of 'Properties' from button.hpp
   MorseCode morseCode;                            // Creates instance of the class 'MorseCode'
   Data::InputArray userData;                      // Creates instance of the class 'Data'
+  Display display;                                // Creates instance of the 'Display' class in display.hpp
+  Light indicator;                                // Instance of 'Light' class from rgb.hpp and handles rgb light indication signals.
 } Instance;
 
 // Runs only once when the board turns on. Initializes the pins and sets up board to properly run.
 void setup()
 {
-
   Serial.begin(9600); // Initialize serial communication at 9600 bits per second
 
   // Initializes the digital board pins for I/O
@@ -100,9 +101,14 @@ void loop()
   {
     if (Instance.morseCode.check_pattern()) // Will change the display arrays if a pattern condition was successful found
     {
+      Instance.display.update_display(Instance.morseCode.patternResult);
+      Instance.indicator.color(LOW, HIGH, LOW); // Sets rgb indicator to green
     }
     else
     {
+      Instance.indicator.color(HIGH, LOW, LOW); // Sets rgb indicator to red
     };
   };
+
+  Instance.indicator.off(); // Turns off rgb indicator at the end of everything
 }
