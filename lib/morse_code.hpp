@@ -51,6 +51,20 @@ private:
         add_input(input_array.userInput, button_properties.longPress);
     };
 
+    // Handles when the user is done inputting morse code and will process the pattern.
+    void handleFinalRelease()
+    {
+        // Sets marker to 'true' for final input
+        button_properties.inputFinal = true;
+    };
+
+    // Handles when the user is ready to clear the screen
+    void handleClear()
+    {
+        // Sets marker to 'true' for a go to clear the screen
+        button_properties.inputClearFinal = true;
+    };
+
 public:
     // Adds user's input (i.e. "0" or "1" for short or long press) to array containing the pattern. For storing a pattern of inputs, which is later used to handle proper character detection.
     bool add_input(char *array, char newChar)
@@ -132,19 +146,32 @@ public:
         button_properties.stdPressDuration = calculator.stdArray(input_array.pressDurations, button_properties.avgPressDuration);       // Calculates standard deviation
         button_properties.stdReleaseDuration = calculator.stdArray(input_array.releaseDurations, button_properties.avgReleaseDuration); // Calculates standard deviation
 
-        float threshold = 1.5; // Threshold for learned short and long press/release durations.
+        float pressThreshold = 1.5;    // Threshold for learned short and long press/release durations.
+        float releaseThreshold = 2.25; // Threshold for learned release duration.
 
         // Function pointer to dynamically handle short or long presses
         void (MorseCode::*pressHandler)() = nullptr;
 
         // Determines whether the current press is short or long
-        if (button_properties.pressDuration <= button_properties.avgPressDuration + threshold * button_properties.stdPressDuration || button_properties.pressDuration <= button_properties.shortPressCap)
+        if (button_properties.pressDuration <= button_properties.avgPressDuration + pressThreshold * button_properties.stdPressDuration || button_properties.pressDuration <= button_properties.shortPressCap)
         {
             pressHandler = &MorseCode::handleShortPress;
         }
         else
         {
             pressHandler = &MorseCode::handleLongPress;
+        };
+
+        // Checks whether or not the user is done inputting or wants to clear the screen
+        if (button_properties.releaseDuration >= button_properties.avgReleaseDuration + releaseThreshold * button_properties.stdReleaseDuration || button_properties.releaseDuration >= button_properties.inputFinalThreshold)
+        {
+            &MorseCode::handleFinalRelease;
+        };
+
+        // Checks whether or not the user wants to clear the screen.
+        if (button_properties.pressDuration >= button_properties.clearScreenThreshold)
+        {
+            &MorseCode::handleClear;
         };
 
         // Execute the appropriate handler

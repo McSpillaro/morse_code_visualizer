@@ -58,8 +58,10 @@ LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7); // Defines th
 // Creating instances of classes from header files.
 struct ClassInstances
 {
-  Button button;       // Creates instance of the class 'Button'
-  MorseCode morseCode; // Creates instance of the class 'MorseCode'
+  Button button;                                  // Creates instance of the class 'Button'
+  Properties::ButtonProperties button_properties; // Creates instance of 'Properties' from button.hpp
+  MorseCode morseCode;                            // Creates instance of the class 'MorseCode'
+  Data::InputArray userData;                      // Creates instance of the class 'Data'
 } Instance;
 
 // Runs only once when the board turns on. Initializes the pins and sets up board to properly run.
@@ -73,8 +75,9 @@ void setup()
   pinMode(pin.r, OUTPUT);         // Sets red rgb pin to output
   pinMode(pin.g, OUTPUT);         // Sets green rgb pin to output
   pinMode(pin.b, OUTPUT);         // Sets blue rgb pin to output
-  for (int i = pin.d4; i <= pin.d7; i++)
-  {                     // Iterating pin setup for lcd
+
+  for (int i = pin.d4; i <= pin.d7; i++) // Iterating pin setup for lcd
+  {
     pinMode(i, OUTPUT); // Sets each digital pin for lcd to output
   }
 
@@ -91,6 +94,15 @@ void setup()
 void loop()
 {
   Instance.button.calc_press(pin.pushButton); // Constantly checks for button press/release
+  Instance.morseCode.check_press();           // Checks for a valid short or long press based on the data and input durations (press/release)
 
-  if ()
+  if (strlen(Instance.userData.userInput) == 4 || Instance.button_properties.inputFinal)
+  {
+    if (Instance.morseCode.check_pattern()) // Will change the display arrays if a pattern condition was successful found
+    {
+    }
+    else
+    {
+    };
+  };
 }

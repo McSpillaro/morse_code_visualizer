@@ -25,8 +25,12 @@ public:
         unsigned long releaseDuration = 0;               // stores duration of button not being pressed
         const unsigned long debounceDelay = 50;          // debounce time in milliseconds
         const unsigned long clearScreenThreshold = 2000; // hold button for 2 seconds to clear lcd
+        const unsigned long inputFinalThreshold = 2000;  // release button for 2 seconds to finalize input
         const int shortPressCap = 100;                   // 100 ms hardcap to detect a short press
         const int longPressCap = 300;                    // 300 ms hardcap to detect a long press
+
+        bool inputFinal = false;      // Whether or not the user is done inputting presses for morse code
+        bool inputClearFinal = false; // Whether or not the user wants to clear the screen or not
 
         char shortPress = '0'; // defines the short press as char 0
         char longPress = '1';  // defines the long press as char 1
@@ -45,10 +49,11 @@ private:
     Properties::ButtonProperties button_properties; // Duration, state, and defintion properties of a button.
 
 public: // Allows all objects in class to be used by other project files.
-    // Function to handle detecting valid button presses and releases. Also calculates whether or not the button is pressed or released for x amount of time (ms).
+    // Boolean function to check whether or not the correct
+
+    // Function to handle detecting valid button presses and releases. Also calculates whether or not the button is pressed or released for x amount of time (ms). Essentially just adds data durations.
     void calc_press(int buttonPin)
     {
-
         button_properties.currentPressTime = millis(); // gets the current time
 
         // general defining of necessary variables regarding button pressing times and calculations
