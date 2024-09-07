@@ -33,21 +33,14 @@ The circuit (Button & RGB light):
 #include <avr/pgmspace.h>
 
 #include "../lib/button.hpp"
-#include "../lib/display.hpp"
+#include "../lib/lcd.hpp"
 #include "../lib/morse_code.hpp"
 #include "../lib/rgb.hpp"
 
-// Objects specific to the board's I/O pin layout and configuration.
-struct PinConfiguation
-{
-  // Defining the variables for the digital pin I/O on LCD and RGB light.
-  const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
-  // Defining the variables for the digital pin I/O on RGB & Button.
-  const int pushButton = 7, r = 10, g = 9, b = 6;
-} pin;
-
+// Defining the variables for the digital pin I/O on LCD and RGB light.
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 // Defines the lcd based on the pins it is connected to.
-LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7);
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 // Creating instances of classes from header files.
 struct ClassInstances
@@ -66,12 +59,12 @@ void setup()
   Serial.begin(9600); // Initialize serial communication at 9600 bits per second
 
   // Initializes the digital board pins for I/O
-  pinMode(pin.pushButton, INPUT); // sets button to read input
-  pinMode(pin.r, OUTPUT);         // Sets red rgb pin to output
-  pinMode(pin.g, OUTPUT);         // Sets green rgb pin to output
-  pinMode(pin.b, OUTPUT);         // Sets blue rgb pin to output
+  pinMode(Instance.button.buttonPin, INPUT); // sets button to read input
+  pinMode(Instance.indicator.r, OUTPUT);     // Sets red rgb pin to output
+  pinMode(Instance.indicator.g, OUTPUT);     // Sets green rgb pin to output
+  pinMode(Instance.indicator.b, OUTPUT);     // Sets blue rgb pin to output
 
-  for (int i = pin.d4; i <= pin.d7; i++) // Iterating pin setup for lcd
+  for (int i = d4; i <= d7; i++) // Iterating pin setup for lcd
   {
     pinMode(i, OUTPUT); // Sets each digital pin for lcd to output
   }
@@ -88,14 +81,14 @@ void setup()
 // Constantly runs when the board turns on.
 void loop()
 {
-  Instance.button.calc_press(pin.pushButton); // Constantly checks for button press/release
-  Instance.morseCode.check_press();           // Checks for a valid short or long press based on the data and input durations (press/release)
+  Instance.button.calc_press();     // Constantly checks for button press/release
+  Instance.morseCode.check_press(); // Checks for a valid short or long press based on the data and input durations (press/release)
 
   if (strlen(Instance.userData.userInput) == 4 || Instance.button_properties.inputFinal)
   {
     if (Instance.morseCode.check_pattern()) // Will change the display arrays if a pattern condition was successful found
     {
-      Instance.display.update_display(Instance.morseCode.patternResult);
+      Instance.display.update_display(lcd, Instance.morseCode.patternResult);
       Instance.indicator.color(LOW, HIGH, LOW); // Sets rgb indicator to green
     }
     else

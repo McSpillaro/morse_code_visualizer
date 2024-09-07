@@ -4,18 +4,15 @@
 #include <Arduino.h>
 #include <LiquidCrystal.h>
 
+// Specific for configuaring the lcd and its corresponding rows by an array for manual changing of slots
 class ConfigLCD
 {
 public:
-    // Specific for configuaring the lcd and its corresponding rows by an array for manual changing of slots
     struct LcdConfiguration // Sets up the LCD to have predefined lines for buffering
     {
         static const int MAX_LCD_SLOTS = 17; // Max amount of lcd columns in one row.
-
-        static const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2; // Defining the variables for the digital pin I/O on LCD and RGB light.
-
-        char line0[MAX_LCD_SLOTS] = ""; // Array containing characters which will be displayed on the first row of the lcd.
-        char line1[MAX_LCD_SLOTS] = ""; // Array containing characters which will be displayed on the second row of the lcd.
+        char line0[MAX_LCD_SLOTS] = "";      // Array containing characters which will be displayed on the first row of the lcd.
+        char line1[MAX_LCD_SLOTS] = "";      // Array containing characters which will be displayed on the second row of the lcd.
     };
 };
 
@@ -53,7 +50,7 @@ private:
 
 public:
     // Updates the display of the LCD including the buffer
-    void update_display(char letter)
+    void update_display(LiquidCrystal lcd, char letter)
     {
         lcd_scroll(letter);
         lcd.setCursor(0, 0);         // Sets cursor to the upper left corner (1st column, 1st row)

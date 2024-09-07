@@ -48,11 +48,11 @@ class Button
 private:
     Properties::ButtonProperties button_properties; // Duration, state, and defintion properties of a button.
 
-public: // Allows all objects in class to be used by other project files.
-    // Boolean function to check whether or not the correct
+public:
+    const int buttonPin = 7; // Pin connection on Arduino for the push button input.
 
     // Function to handle detecting valid button presses and releases. Also calculates whether or not the button is pressed or released for x amount of time (ms). Essentially just adds data durations.
-    void calc_press(int buttonPin)
+    void calc_press()
     {
         button_properties.currentPressTime = millis(); // gets the current time
 
