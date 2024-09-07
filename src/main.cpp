@@ -46,14 +46,8 @@ struct PinConfiguation
   const int pushButton = 7, r = 10, g = 9, b = 6;
 } pin;
 
-const int MAX_LCD_SLOTS = 17; // the max amount of slots for a single lcd row
-// Specific for configuaring the lcd and its corresponding rows by an array for manual changing of slots
-struct LcdConfiguration
-{                                 // Sets up the LCD to have predefined lines for buffering
-  char line0[MAX_LCD_SLOTS] = ""; // Array containing characters which will be displayed on the first row of the lcd.
-  char line1[MAX_LCD_SLOTS] = ""; // Array containing characters which will be displayed on the second row of the lcd.
-} lcd_config;
-LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7); // Defines the lcd based on its pins.
+// Defines the lcd based on the pins it is connected to.
+LiquidCrystal lcd(pin.rs, pin.en, pin.d4, pin.d5, pin.d6, pin.d7);
 
 // Creating instances of classes from header files.
 struct ClassInstances

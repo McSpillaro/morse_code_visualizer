@@ -1,11 +1,29 @@
-#ifndef DISPLAY_HPP
-#define DISPLAY_HPP
+#ifndef LCD_HPP
+#define LCD_HPP
 
 #include <Arduino.h>
+#include <LiquidCrystal.h>
+
+class ConfigLCD
+{
+public:
+    // Specific for configuaring the lcd and its corresponding rows by an array for manual changing of slots
+    struct LcdConfiguration // Sets up the LCD to have predefined lines for buffering
+    {
+        static const int MAX_LCD_SLOTS = 17; // Max amount of lcd columns in one row.
+
+        static const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2; // Defining the variables for the digital pin I/O on LCD and RGB light.
+
+        char line0[MAX_LCD_SLOTS] = ""; // Array containing characters which will be displayed on the first row of the lcd.
+        char line1[MAX_LCD_SLOTS] = ""; // Array containing characters which will be displayed on the second row of the lcd.
+    };
+};
 
 class Display
 {
 private:
+    ConfigLCD::LcdConfiguration lcd_config; // Instance of 'ConfigLCD' class with struct containing pins and arrays.
+
     void lcd_scroll(char letter)
     {
         int length0 = strlen(lcd_config.line0); // length of the array for the top row on the lcd
@@ -20,7 +38,7 @@ private:
             for (int i = 0; i <= length0; i++)
             {                                                  // goes through each filled slot in the 1st lcd row
                 lcd_config.line0[i + 1] = lcd_config.line0[i]; // sets next slot to be the next to be the prev character
-                if (i + 1 == MAX_LCD_SLOTS)
+                if (i + 1 == lcd_config.MAX_LCD_SLOTS)
                 {                                              // if the 1st row of the lcd is full
                     lcd_config.line1[0] = lcd_config.line0[i]; // moves last character in 1st row to start of 2nd row
                     for (int j = 0; j < length1; j++)
@@ -45,4 +63,4 @@ public:
     };
 };
 
-#endif // DISPLAY_HPP
+#endif // LCD_HPP
