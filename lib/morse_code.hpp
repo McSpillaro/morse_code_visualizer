@@ -87,7 +87,7 @@ public:
         }
         else
         {
-            Serial.println("Array containing pattern is full.");
+            // Serial.println("Array containing pattern is full.");
             return false; // Array is full
         }
     };
